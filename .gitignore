@@ -2,3 +2,5 @@ Notes.md
 .env
 serviceAccount.json
 venv
+.vscode
+__pycache__
