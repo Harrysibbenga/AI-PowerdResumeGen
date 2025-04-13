@@ -1,0 +1,69 @@
+---
+import MainLayout from "../layouts/MainLayout.astro";
+import ResumeForm from "../components/ResumeForm.vue";
+---
+
+<MainLayout title="Create Your Resume | Resume AI Generator">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <div class="bg-white rounded-lg shadow-md p-6 md:p-8">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold mb-2">
+                    Create Your Professional Resume
+                </h1>
+                <p class="text-gray-600">
+                    Fill in your details below and our AI will generate a
+                    tailored resume for your industry
+                </p>
+            </div>
+
+            <div id="login-required" class="hidden py-12 text-center">
+                <div class="max-w-md mx-auto bg-white rounded-lg p-8">
+                    <h2 class="text-2xl font-bold mb-4">Login Required</h2>
+                    <p class="text-gray-600 mb-6">
+                        Please log in to create and save your resume.
+                    </p>
+                    <div class="flex justify-center gap-4">
+                        <a
+                            href="/login"
+                            class="px-4 py-2 bg-blue-600 text-white rounded"
+                        >
+                            Log In
+                        </a>
+                        <a
+                            href="/register"
+                            class="px-4 py-2 border border-blue-600 text-blue-600 rounded"
+                        >
+                            Register
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div id="resume-form-container">
+                <ResumeForm client:load />
+            </div>
+        </div>
+    </div>
+</MainLayout>
+
+<script>
+    import { getAuth, onAuthStateChanged } from "firebase/auth";
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const auth = getAuth();
+        const loginRequired = document.getElementById("login-required");
+        const formContainer = document.getElementById("resume-form-container");
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is signed in
+                loginRequired.classList.add("hidden");
+                formContainer.classList.remove("hidden");
+            } else {
+                // User is signed out
+                loginRequired.classList.remove("hidden");
+                formContainer.classList.add("hidden");
+            }
+        });
+    });
+</script>
