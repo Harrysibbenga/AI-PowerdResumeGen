@@ -1,0 +1,66 @@
+---
+// Testimonials section
+const testimonials = [
+  {
+    quote:
+      "ResumeAI helped me land multiple interviews in the cybersecurity field within just two weeks. The ATS optimization made all the difference.",
+    author: "Alex Johnson",
+    role: "Cybersecurity Analyst",
+    company: "SecureTech Solutions",
+  },
+  {
+    quote:
+      "As a legal professional, having industry-specific terminology properly highlighted on my resume was crucial. ResumeAI understood exactly what hiring managers in law firms look for.",
+    author: "Sarah Williams",
+    role: "Corporate Attorney",
+    company: "Roberts & Partners LLP",
+  },
+  {
+    quote:
+      "After struggling to get callbacks for months, my new AI-generated resume got me three interviews in the first week. The difference was remarkable.",
+    author: "Michael Chen",
+    role: "Network Engineer",
+    company: "CloudSphere Technologies",
+  },
+];
+---
+
+<section class="py-16 bg-gray-50">
+  <div class="container mx-auto px-4 max-w-6xl">
+    <h2 class="text-3xl font-bold text-center mb-4 text-gray-800">
+      What Our Users Say
+    </h2>
+    <p class="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
+      Thousands of professionals have used ResumeAI to advance their careers in
+      specialized fields
+    </p>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      {
+        testimonials.map((testimonial) => (
+          <div class="bg-white p-6 rounded-lg shadow-md relative">
+            <div class="absolute -top-4 left-6 text-primary-500 text-5xl">
+              "
+            </div>
+            <p class="text-gray-700 mb-6 pt-4 relative z-10">
+              {testimonial.quote}
+            </p>
+            <div class="flex items-center">
+              <div class="bg-gray-200 rounded-full w-12 h-12 flex items-center justify-center mr-4">
+                <span class="text-gray-500 font-bold text-lg">
+                  {testimonial.author.charAt(0)}
+                </span>
+              </div>
+              <div>
+                <p class="font-bold text-gray-800">{testimonial.author}</p>
+                <p class="text-gray-600 text-sm">
+                  {testimonial.role}, {testimonial.company}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>

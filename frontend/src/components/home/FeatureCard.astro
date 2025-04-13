@@ -1,0 +1,32 @@
+---
+// FeatureCard.astro
+interface Props {
+    title: string;
+    description: string;
+    icon: string;
+}
+
+const { title, description, icon } = Astro.props;
+---
+
+<div
+    class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"
+>
+    <div class="text-primary-600 mb-4">
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-12 w-12"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+        >
+            <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d={icon}></path>
+        </svg>
+    </div>
+    <h3 class="text-xl font-bold mb-2">{title}</h3>
+    <p class="text-gray-600">{description}</p>
+</div>

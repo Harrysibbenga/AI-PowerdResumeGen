@@ -1,0 +1,44 @@
+---
+import FeatureCard from "./FeatureCard.astro";
+
+const features = [
+    {
+        title: "AI-Powered Content",
+        description:
+            "Advanced AI generates professional summaries and achievement-focused bullet points optimized for ATS systems.",
+        icon: "M13 10V3L4 14h7v7l9-11h-7z",
+    },
+    {
+        title: "Industry-Tailored Layouts",
+        description:
+            "Templates designed specifically for cybersecurity, legal, healthcare, and more — professionally written and formatted.",
+        icon: "M13 10V3L4 14h7v7l9-11h-7z",
+    },
+    {
+        title: "Instant PDF & DOCX Export",
+        description:
+            "Download polished, professional-quality documents in seconds — ready to send to employers.",
+        icon: "M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z",
+    },
+];
+---
+
+<section class="py-16 bg-white">
+    <div class="container mx-auto px-4 max-w-6xl">
+        <h2 class="text-3xl font-bold text-center mb-12 text-gray-800">
+            Why Choose Our Resume Builder?
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {
+                features.map((feature) => (
+                    <FeatureCard
+                        title={feature.title}
+                        description={feature.description}
+                        icon={feature.icon}
+                    />
+                ))
+            }
+        </div>
+    </div>
+</section>

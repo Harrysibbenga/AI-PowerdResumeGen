@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles */
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    @apply text-gray-800;
+}
+
+/* Focus styles for accessibility */
+:focus {
+    @apply outline-none ring-2 ring-primary-500 ring-offset-2;
+}
+
+/* Custom container padding for mobile */
+@media (max-width: 640px) {
+    .container {
+        @apply px-4;
+    }
+}
