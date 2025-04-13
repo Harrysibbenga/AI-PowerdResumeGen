@@ -1,0 +1,88 @@
+---
+import MainLayout from "../layouts/MainLayout.astro";
+---
+
+<MainLayout title="Dashboard | ResumeAI">
+  <div class="min-h-[calc(100vh-300px)] py-12 px-4">
+    <div class="container mx-auto max-w-7xl">
+      <h1 class="text-3xl font-bold text-gray-900 mb-8">Dashboard</h1>
+      
+      <div class="bg-white rounded-lg shadow p-6 mb-8">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-xl font-semibold">Your Resumes</h2>
+          <a href="/builder" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors">
+            Create New Resume
+          </a>
+        </div>
+        
+        <div id="resumes-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Resumes will be loaded here -->
+          <div class="border border-gray-200 rounded-lg p-6 flex flex-col h-64">
+            <p class="text-gray-500 text-center flex items-center justify-center h-full">
+              No resumes yet. Click "Create New Resume" to get started.
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-semibold mb-4">Account Settings</h2>
+        <div class="flex flex-col md:flex-row md:items-center justify-between">
+          <div>
+            <p class="text-gray-700 font-medium">Email: <span id="user-email">Loading...</span></p>
+            <p class="text-gray-700 font-medium">Name: <span id="user-name">Loading...</span></p>
+          </div>
+          <div class="mt-4 md:mt-0">
+            <button id="update-profile-btn" class="text-primary-600 hover:text-primary-800 mr-4">
+              Update Profile
+            </button>
+            <button id="change-password-btn" class="text-primary-600 hover:text-primary-800">
+              Change Password
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</MainLayout>
+
+<script>
+  import { getAuth, onAuthStateChanged } from "firebase/auth";
+  import { app } from "../utils/firebase";
+
+  const auth = getAuth(app);
+  
+  // Get DOM elements
+  const userEmail = document.getElementById('user-email');
+  const userName = document.getElementById('user-name');
+  
+  // Check if user is logged in
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      // User is signed in
+      if (userEmail) userEmail.textContent = user.email;
+      if (userName) userName.textContent = user.displayName || 'Not set';
+    } else {
+      // User is not signed in, redirect to login
+      window.location.href = '/login';
+    }
+  });
+  
+  // Add event listeners
+  const updateProfileBtn = document.getElementById('update-profile-btn');
+  const changePasswordBtn = document.getElementById('change-password-btn');
+  
+  if (updateProfileBtn) {
+    updateProfileBtn.addEventListener('click', () => {
+      // For future implementation
+      alert('Update profile functionality will be available soon.');
+    });
+  }
+  
+  if (changePasswordBtn) {
+    changePasswordBtn.addEventListener('click', () => {
+      // For future implementation
+      alert('Change password functionality will be available soon.');
+    });
+  }
+</script>

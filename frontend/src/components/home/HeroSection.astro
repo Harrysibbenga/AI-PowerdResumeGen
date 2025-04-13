@@ -1,0 +1,43 @@
+---
+import Button from "../common/Button.astro";
+---
+
+<section
+    class="bg-gradient-to-r from-primary-700 to-primary-900 text-white py-20"
+>
+    <div class="container mx-auto px-4 max-w-6xl">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+                <h1 class="text-4xl md:text-5xl font-bold mb-6 leading-tight">
+                    Create Professional Resumes with AI Precision
+                </h1>
+                <p class="text-lg mb-8 text-primary-100">
+                    Specialized for cybersecurity, legal, and other niche
+                    industries. Stand out with perfectly crafted resumes
+                    optimized for ATS systems.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <a
+                        href="/builder"
+                        class="bg-white text-primary-700 hover:bg-primary-50 py-3 px-6 rounded-lg font-medium text-center transition-colors"
+                    >
+                        Create Your Resume
+                    </a>
+                    <a
+                        href="/templates"
+                        class="bg-transparent border-2 border-white hover:bg-white/10 text-white py-3 px-6 rounded-lg font-medium text-center transition-colors"
+                    >
+                        View Templates
+                    </a>
+                </div>
+            </div>
+            <div class="hidden lg:block">
+                <img
+                    src="/images/resume-preview.svg"
+                    alt="Resume Builder Preview"
+                    class="w-full max-w-md mx-auto rounded-lg shadow-xl"
+                />
+            </div>
+        </div>
+    </div>
+</section>
