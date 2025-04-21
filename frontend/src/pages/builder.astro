@@ -1,6 +1,6 @@
 ---
-import MainLayout from "../layouts/MainLayout.astro";
-import ResumeForm from "../components/ResumeForm.vue";
+import MainLayout from "@/layouts/MainLayout.astro";
+import ResumeForm from "@/components/resumeform/ResumeForm.vue";
 ---
 
 <MainLayout title="Create Your Resume | Resume AI Generator">
@@ -40,6 +40,7 @@ import ResumeForm from "../components/ResumeForm.vue";
             </div>
 
             <div id="resume-form-container">
+                <!-- Using client:only to prevent server-side rendering -->
                 <ResumeForm client:load />
             </div>
         </div>
@@ -48,9 +49,10 @@ import ResumeForm from "../components/ResumeForm.vue";
 
 <script>
     import { getAuth, onAuthStateChanged } from "firebase/auth";
+    import { app } from "@/utils/firebase";
 
     document.addEventListener("DOMContentLoaded", () => {
-        const auth = getAuth();
+        const auth = getAuth(app);
         const loginRequired = document.getElementById("login-required");
         const formContainer = document.getElementById("resume-form-container");
 

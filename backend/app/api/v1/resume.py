@@ -66,96 +66,67 @@ async def create_resume(
 ):
     try:
         user_id = user["uid"]
-        
-        # Choose AI service based on settings
+
         if settings.USE_DEEPSEEK and settings.DEEPSEEK_API_KEY:
             resume_content = await generate_resume_with_deepseek(request.profile.dict(), request.tone)
         else:
             resume_content = await generate_resume_with_gpt(request.profile.dict(), request.tone)
-        
-        # Create resume document in Firestore
+
         resume_id = str(uuid.uuid4())
         resume_ref = db.collection("resumes").document(resume_id)
-        
+
         resume_data = {
             "id": resume_id,
             "user_id": user_id,
             "industry": request.profile.industry,
             "profile_data": request.profile.dict(),
             "ai_content": resume_content,
-            "export_status": "free",  # Not downloaded yet
+            "export_status": "free",
             "created_at": datetime.now()
         }
-        
+
         resume_ref.set(resume_data)
-        
+
         return {
             "id": resume_id,
             "sections": resume_content,
             "message": "Resume generated successfully!"
         }
-    
+
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error generating resume: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error generating resume: {str(e)}")
 
 @router.get("/resumes/{resume_id}", response_model=Dict[str, Any])
-async def get_resume(
-    resume_id: str,
-    user: Dict = Depends(get_current_user)
-):
+async def get_resume(resume_id: str, user: Dict = Depends(get_current_user)):
     try:
         user_id = user["uid"]
-        
-        # Get resume from Firestore
         resume_ref = db.collection("resumes").document(resume_id)
         resume = resume_ref.get()
-        
+
         if not resume.exists:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Resume not found"
-            )
-        
+            raise HTTPException(status_code=404, detail="Resume not found")
+
         resume_data = resume.to_dict()
-        
-        # Verify ownership
+
         if resume_data["user_id"] != user_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have permission to access this resume"
-            )
-        
+            raise HTTPException(status_code=403, detail="Unauthorized access")
+
         return resume_data
-    
+
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error retrieving resume: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error retrieving resume: {str(e)}")
 
 @router.get("/resumes", response_model=List[Dict[str, Any]])
-async def list_resumes(
-    user: Dict = Depends(get_current_user)
-):
+async def list_resumes(user: Dict = Depends(get_current_user)):
     try:
         user_id = user["uid"]
-        
-        # Query resumes for the current user
-        resumes_ref = db.collection("resumes").where("user_id", "==", user_id).order_by("created_at", direction=firestore.Query.DESCENDING)
+        resumes_ref = db.collection("resumes").where("user_id", "==", user_id)
         resumes = resumes_ref.stream()
-        
         return [resume.to_dict() for resume in resumes]
-    
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error listing resumes: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error listing resumes: {str(e)}")
 
 @router.post("/export", response_model=ExportResponse)
 async def export_resume(
@@ -165,93 +136,41 @@ async def export_resume(
 ):
     try:
         user_id = user["uid"]
-        
-        # Get resume from Firestore
         resume_ref = db.collection("resumes").document(request.resumeId)
         resume = resume_ref.get()
-        
+
         if not resume.exists:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Resume not found"
-            )
-        
+            raise HTTPException(status_code=404, detail="Resume not found")
+
         resume_data = resume.to_dict()
-        
-        # Verify ownership
+
         if resume_data["user_id"] != user_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have permission to export this resume"
-            )
-        
-        # Check subscription status
+            raise HTTPException(status_code=403, detail="Unauthorized export attempt")
+
         user_ref = db.collection("users").document(user_id)
         user_doc = user_ref.get()
-        
-        if not user_doc.exists:
-            is_subscribed = False
-        else:
-            user_data = user_doc.to_dict()
-            is_subscribed = user_data.get("subscription", False)
-        
-        # If not subscribed and already exported, require payment
+        is_subscribed = user_doc.exists and user_doc.to_dict().get("subscription", False)
+
         if not is_subscribed and resume_data["export_status"] not in ["paid", "subscribed"]:
-            # Client should handle payment flow
-            return {
-                "download_url": "",
-                "message": "payment_required"
-            }
-        
-        # Generate PDF or DOCX
+            return {"download_url": "", "message": "payment_required"}
+
         if request.format.lower() == "pdf":
             export_path = f"exports/{user_id}/{request.resumeId}.pdf"
-            background_tasks.add_task(
-                export_to_pdf,
-                resume_data,
-                request.content,
-                export_path
-            )
+            background_tasks.add_task(export_to_pdf, resume_data, request.content, export_path)
         elif request.format.lower() == "docx":
             export_path = f"exports/{user_id}/{request.resumeId}.docx"
-            background_tasks.add_task(
-                export_to_docx,
-                resume_data,
-                request.content,
-                export_path
-            )
+            background_tasks.add_task(export_to_docx, resume_data, request.content, export_path)
         else:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid export format. Supported formats: pdf, docx"
-            )
-        
-        # Update export status
-        resume_ref.update({
-            "export_status": "subscribed" if is_subscribed else "paid"
-        })
-        
-        # Return download URL
-        download_url = f"/api/v1/download/{export_path}"
-        
-        return {
-            "download_url": download_url,
-            "message": "Export successful"
-        }
-    
+            raise HTTPException(status_code=400, detail="Invalid export format")
+
+        resume_ref.update({"export_status": "subscribed" if is_subscribed else "paid"})
+        return {"download_url": f"/api/v1/download/{export_path}", "message": "Export successful"}
+
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error exporting resume: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error exporting resume: {str(e)}")
 
 @router.get("/download/{user_id}/{file_name}")
-async def download_file(
-    user_id: str,
-    file_name: str,
-    user: Dict = Depends(get_current_user)
-):
-    # Implementation for file download
+async def download_file(user_id: str, file_name: str, user: Dict = Depends(get_current_user)):
     pass
