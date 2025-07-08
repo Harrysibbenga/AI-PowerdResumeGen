@@ -1,8 +1,5 @@
 ---
-import MainLayout from "../layouts/MainLayout.astro";
----
-
-<!-- ---
+import ResumeContainer from "../components/vue/dashboard/resume/ResumeContainer.vue";
 import MainLayout from "../layouts/MainLayout.astro";
 ---
 
@@ -11,31 +8,10 @@ import MainLayout from "../layouts/MainLayout.astro";
     <div class="container mx-auto max-w-7xl">
       <h1 class="text-3xl font-bold text-gray-900 mb-8">Dashboard</h1>
 
-      <div class="bg-white rounded-lg shadow p-6 mb-8">
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="text-xl font-semibold">Your Resumes</h2>
-          <a
-            href="/builder"
-            class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors"
-          >
-            Create New Resume
-          </a>
-        </div>
+      <!-- Resume Container - Now using Vue component -->
+      <ResumeContainer client:load />
 
-        <div
-          id="resumes-container"
-          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-        >
-          <div class="border border-gray-200 rounded-lg p-6 flex flex-col h-64">
-            <p
-              class="text-gray-500 text-center flex items-center justify-center h-full"
-            >
-              No resumes yet. Click "Create New Resume" to get started.
-            </p>
-          </div>
-        </div>
-      </div>
-
+      <!-- Account Settings Section -->
       <div class="bg-white rounded-lg shadow p-6">
         <h2 class="text-xl font-semibold mb-4">Account Settings</h2>
         <div class="flex flex-col md:flex-row md:items-center justify-between">
@@ -50,17 +26,134 @@ import MainLayout from "../layouts/MainLayout.astro";
           <div class="mt-4 md:mt-0">
             <button
               id="update-profile-btn"
-              class="text-primary-600 hover:text-primary-800 mr-4"
+              class="text-primary-600 hover:text-primary-800 mr-4 transition-colors"
             >
               Update Profile
             </button>
             <button
               id="change-password-btn"
-              class="text-primary-600 hover:text-primary-800"
+              class="text-primary-600 hover:text-primary-800 transition-colors"
             >
               Change Password
             </button>
           </div>
+        </div>
+      </div>
+
+      <!-- Update Profile Modal -->
+      <div
+        id="update-profile-modal"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden"
+      >
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">
+            Update Profile
+          </h3>
+          <form id="update-profile-form">
+            <div class="mb-4">
+              <label
+                for="display-name"
+                class="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Display Name
+              </label>
+              <input
+                type="text"
+                id="display-name"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                placeholder="Enter your display name"
+              />
+            </div>
+            <div class="flex justify-end space-x-3">
+              <button
+                type="button"
+                id="cancel-update-profile"
+                class="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+              >
+                Update
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Change Password Modal -->
+      <div
+        id="change-password-modal"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden"
+      >
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">
+            Change Password
+          </h3>
+          <form id="change-password-form">
+            <div class="mb-4">
+              <label
+                for="current-password"
+                class="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Current Password
+              </label>
+              <input
+                type="password"
+                id="current-password"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                placeholder="Enter current password"
+                required
+              />
+            </div>
+            <div class="mb-4">
+              <label
+                for="new-password"
+                class="block text-sm font-medium text-gray-700 mb-2"
+              >
+                New Password
+              </label>
+              <input
+                type="password"
+                id="new-password"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                placeholder="Enter new password"
+                required
+              />
+            </div>
+            <div class="mb-6">
+              <label
+                for="confirm-password"
+                class="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Confirm New Password
+              </label>
+              <input
+                type="password"
+                id="confirm-password"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                placeholder="Confirm new password"
+                required
+              />
+            </div>
+            <div class="flex justify-end space-x-3">
+              <button
+                type="button"
+                id="cancel-change-password"
+                class="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+              >
+                Change Password
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
@@ -68,221 +161,205 @@ import MainLayout from "../layouts/MainLayout.astro";
 </MainLayout>
 
 <script>
-  import { getAuth, onAuthStateChanged } from "firebase/auth";
+  import {
+    getAuth,
+    onAuthStateChanged,
+    updateProfile,
+    updatePassword,
+    EmailAuthProvider,
+    reauthenticateWithCredential,
+  } from "firebase/auth";
   import { app } from "@/utils/firebase";
-
   const auth = getAuth(app);
   const userEmail = document.getElementById("user-email");
   const userName = document.getElementById("user-name");
-  const resumesContainer = document.getElementById("resumes-container");
 
-  async function loadResumesFromAPI() {
-    try {
-      const user = auth.currentUser;
-      if (!user) throw new Error("Not logged in");
+  // Modal elements
+  const updateProfileModal = document.getElementById("update-profile-modal");
+  const changePasswordModal = document.getElementById("change-password-modal");
+  const updateProfileForm = document.getElementById("update-profile-form");
+  const changePasswordForm = document.getElementById("change-password-form");
 
-      const idToken = await user.getIdToken();
-      const API_URL = import.meta.env.PUBLIC_API_URL;
-
-      const res = await fetch(`${API_URL}/api/v1/resumes`, {
-        headers: { Authorization: `Bearer ${idToken}` },
-      });
-
-      if (!res.ok) throw new Error("Failed to fetch resumes");
-
-      const resumes = await res.json();
-      resumesContainer.innerHTML = "";
-
-      if (resumes.length === 0) {
-        resumesContainer.innerHTML = `<div class="border border-gray-200 rounded-lg p-6 flex flex-col h-64">
-          <p class="text-gray-500 text-center flex items-center justify-center h-full">
-            No resumes found. Click \"Create New Resume\" to get started.
-          </p>
-        </div>`;
-        return;
-      }
-
-      resumes.forEach((resume) => {
-        const card = document.createElement("div");
-        card.className =
-          "border border-gray-200 rounded-lg p-6 flex flex-col h-64";
-        const formattedDate = resume.updated_at?.split("T")[0] || "N/A";
-
-        card.innerHTML = `
-          <div class="flex justify-between items-start mb-4">
-            <h3 class="font-semibold text-lg">${resume.title || "Untitled Resume"}</h3>
-            <span class="bg-primary-100 text-primary-800 text-xs px-2 py-1 rounded">
-              ${resume.industry || "General"}
-            </span>
-          </div>
-          <p class="text-gray-600 text-sm flex-grow">${resume.summary || "No summary available"}</p>
-          <div class="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center">
-            <span class="text-xs text-gray-500">Last updated: ${formattedDate}</span>
-            <div>
-              <a href="/builder?id=${resume.id}" class="text-primary-600 hover:text-primary-800 text-sm mr-2">Edit</a>
-              <a href="/preview?id=${resume.id}" class="text-primary-600 hover:text-primary-800 text-sm">View</a>
-            </div>
-          </div>
-        `;
-
-        resumesContainer.appendChild(card);
-      });
-    } catch (err) {
-      console.error("API error:", err);
-      resumesContainer.innerHTML = `<p class="text-red-500">Failed to load resumes.</p>`;
-    }
+  // Show/hide modal functions
+  function showModal(modal) {
+    modal.classList.remove("hidden");
+    document.body.style.overflow = "hidden";
   }
 
+  function hideModal(modal) {
+    modal.classList.add("hidden");
+    document.body.style.overflow = "";
+  }
+
+  // Show success/error messages
+  function showMessage(message, type = "success") {
+    const messageDiv = document.createElement("div");
+    messageDiv.className = `fixed top-4 right-4 px-4 py-2 rounded-lg text-white z-50 ${
+      type === "success" ? "bg-green-500" : "bg-red-500"
+    }`;
+    messageDiv.textContent = message;
+
+    document.body.appendChild(messageDiv);
+
+    setTimeout(() => {
+      messageDiv.remove();
+    }, 3000);
+  }
+
+  // Handle authentication state changes
   onAuthStateChanged(auth, (user) => {
     if (user) {
       if (userEmail) userEmail.textContent = user.email;
       if (userName) userName.textContent = user.displayName || "Not set";
-      loadResumesFromAPI();
+
+      // Pre-fill the update profile form
+      const displayNameInput = document.getElementById("display-name");
+      if (displayNameInput) {
+        displayNameInput.value = user.displayName || "";
+      }
     } else {
       window.location.href = "/login";
     }
   });
 
+  // Update Profile functionality
   document
     .getElementById("update-profile-btn")
     ?.addEventListener("click", () => {
-      alert("Update profile functionality will be available soon.");
+      showModal(updateProfileModal);
     });
 
   document
+    .getElementById("cancel-update-profile")
+    ?.addEventListener("click", () => {
+      hideModal(updateProfileModal);
+    });
+
+  updateProfileForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const displayName = document.getElementById("display-name").value.trim();
+    const user = auth.currentUser;
+
+    if (!user) {
+      showMessage("Not authenticated", "error");
+      return;
+    }
+
+    try {
+      await updateProfile(user, {
+        displayName: displayName,
+      });
+
+      // Update the display
+      if (userName) userName.textContent = displayName || "Not set";
+
+      hideModal(updateProfileModal);
+      showMessage("Profile updated successfully!");
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      showMessage("Failed to update profile: " + error.message, "error");
+    }
+  });
+
+  // Change Password functionality
+  document
     .getElementById("change-password-btn")
     ?.addEventListener("click", () => {
-      alert("Change password functionality will be available soon.");
+      showModal(changePasswordModal);
     });
-</script> -->
-<MainLayout title="Dashboard | ResumeAI">
-  <div class="min-h-[calc(100vh-300px)] py-12 px-4">
-    <div class="container mx-auto max-w-7xl">
-      <h1 class="text-3xl font-bold text-gray-900 mb-8">Dashboard</h1>
 
-      <div class="bg-white rounded-lg shadow p-6 mb-8">
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="text-xl font-semibold">Your Resumes</h2>
-          <a
-            href="/builder"
-            class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors"
-          >
-            Create New Resume
-          </a>
-        </div>
+  document
+    .getElementById("cancel-change-password")
+    ?.addEventListener("click", () => {
+      hideModal(changePasswordModal);
+    });
 
-        <div
-          id="resumes-container"
-          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-        >
-          <div class="border border-gray-200 rounded-lg p-6 flex flex-col h-64">
-            <p
-              class="text-gray-500 text-center flex items-center justify-center h-full"
-            >
-              No resumes yet. Click "Create New Resume" to get started.
-            </p>
-          </div>
-        </div>
-      </div>
+  changePasswordForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-      <div class="bg-white rounded-lg shadow p-6">
-        <h2 class="text-xl font-semibold mb-4">Account Settings</h2>
-        <div class="flex flex-col md:flex-row md:items-center justify-between">
-          <div>
-            <p class="text-gray-700 font-medium">
-              Email: <span id="user-email">Loading...</span>
-            </p>
-            <p class="text-gray-700 font-medium">
-              Name: <span id="user-name">Loading...</span>
-            </p>
-          </div>
-          <div class="mt-4 md:mt-0">
-            <button
-              id="update-profile-btn"
-              class="text-primary-600 hover:text-primary-800 mr-4"
-            >
-              Update Profile
-            </button>
-            <button
-              id="change-password-btn"
-              class="text-primary-600 hover:text-primary-800"
-            >
-              Change Password
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</MainLayout>
+    const currentPassword = document.getElementById("current-password").value;
+    const newPassword = document.getElementById("new-password").value;
+    const confirmPassword = document.getElementById("confirm-password").value;
+    const user = auth.currentUser;
 
-<script>
-  import { getAuth, onAuthStateChanged } from "firebase/auth";
-  import { app } from "@/utils/firebase";
-  import { truncateText, formatTimestamp } from "@/utils/formatters";
-
-  const auth = getAuth(app);
-  const userEmail = document.getElementById("user-email");
-  const userName = document.getElementById("user-name");
-  const resumesContainer = document.getElementById("resumes-container");
-
-  async function loadResumes(user) {
-    try {
-      const idToken = await user.getIdToken();
-      const response = await fetch("http://localhost:8000/api/v1/resumes", {
-        headers: { Authorization: `Bearer ${idToken}` },
-      });
-
-      const resumes = await response.json();
-      resumesContainer.innerHTML = "";
-
-      resumes.forEach((resume) => {
-        const card = document.createElement("div");
-        card.className =
-          "border border-gray-200 rounded-lg p-6 flex flex-col h-64";
-
-        const summary =
-          truncateText(resume.ai_content?.summary, 250) ||
-          "No summary available";
-
-        const title = resume.profile_data?.name || "Untitled Resume";
-        const industry = resume.industry || "General";
-        const date = formatTimestamp(resume.created_at);
-
-        card.innerHTML = `
-          <div class="flex justify-between items-start mb-4">
-            <h3 class="font-semibold text-lg">${title}</h3>
-            <span class="bg-primary-100 text-primary-800 text-xs px-2 py-1 rounded">${industry}</span>
-          </div>
-          <p class="text-gray-600 text-sm flex-grow">${summary}</p>
-          <div class="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center">
-            <span class="text-xs text-gray-500">Created: ${date}</span>
-            <div>
-              <a href="/preview?id=${resume.id}" class="text-primary-600 hover:text-primary-800 text-sm mr-2">View</a>
-              <button class="text-primary-600 hover:text-primary-800 text-sm">Download</button>
-            </div>
-          </div>
-        `;
-
-        resumesContainer.appendChild(card);
-      });
-    } catch (err) {
-      console.error("Failed to load resumes:", err);
-      resumesContainer.innerHTML = `
-        <div class="col-span-full">
-          <p class="text-red-500">Error loading your resumes. Please try again later.</p>
-        </div>
-      `;
+    if (!user) {
+      showMessage("Not authenticated", "error");
+      return;
     }
-  }
 
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      userEmail.textContent = user.email;
-      userName.textContent = user.displayName || "Not set";
-      loadResumes(user);
-    } else {
-      window.location.href = "/login";
+    if (newPassword !== confirmPassword) {
+      showMessage("New passwords don't match", "error");
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      showMessage("New password must be at least 6 characters long", "error");
+      return;
+    }
+
+    try {
+      // Re-authenticate the user first
+      const credential = EmailAuthProvider.credential(
+        user.email,
+        currentPassword,
+      );
+      await reauthenticateWithCredential(user, credential);
+
+      // Update the password
+      await updatePassword(user, newPassword);
+
+      // Clear the form
+      changePasswordForm.reset();
+      hideModal(changePasswordModal);
+      showMessage("Password changed successfully!");
+    } catch (error) {
+      console.error("Error changing password:", error);
+      let errorMessage = "Failed to change password";
+
+      if (error.code === "auth/wrong-password") {
+        errorMessage = "Current password is incorrect";
+      } else if (error.code === "auth/weak-password") {
+        errorMessage = "New password is too weak";
+      } else if (error.code === "auth/requires-recent-login") {
+        errorMessage = "Please log out and log back in, then try again";
+      }
+
+      showMessage(errorMessage, "error");
+    }
+  });
+
+  // Close modals when clicking outside
+  updateProfileModal?.addEventListener("click", (e) => {
+    if (e.target === updateProfileModal) {
+      hideModal(updateProfileModal);
+    }
+  });
+
+  changePasswordModal?.addEventListener("click", (e) => {
+    if (e.target === changePasswordModal) {
+      hideModal(changePasswordModal);
+    }
+  });
+
+  // Close modals with Escape key
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      hideModal(updateProfileModal);
+      hideModal(changePasswordModal);
     }
   });
 </script>
+
+<style>
+  /* Ensure modals appear above other content */
+  .z-50 {
+    z-index: 50;
+  }
+
+  /* Smooth transitions for modals */
+  #update-profile-modal,
+  #change-password-modal {
+    transition: opacity 0.3s ease-in-out;
+  }
+</style>
