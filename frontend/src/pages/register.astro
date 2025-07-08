@@ -3,13 +3,20 @@ import MainLayout from "../layouts/MainLayout.astro";
 ---
 
 <MainLayout title="Create Account | ResumeAI">
-  <div class="min-h-[calc(100vh-300px)] flex items-center justify-center py-12 px-4">
+  <div
+    class="min-h-[calc(100vh-300px)] flex items-center justify-center py-12 px-4"
+  >
     <div class="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-md">
       <div>
-        <h1 class="text-center text-3xl font-extrabold text-gray-900">Create your account</h1>
+        <h1 class="text-center text-3xl font-extrabold text-gray-900">
+          Create your account
+        </h1>
         <p class="mt-2 text-center text-sm text-gray-600">
           Or
-          <a href="/login" class="font-medium text-primary-600 hover:text-primary-500">
+          <a
+            href="/login"
+            class="font-medium text-primary-600 hover:text-primary-500"
+          >
             sign in to your existing account
           </a>
         </p>
@@ -18,44 +25,81 @@ import MainLayout from "../layouts/MainLayout.astro";
         <div class="rounded-md shadow-sm -space-y-px">
           <div>
             <label for="full-name" class="sr-only">Full name</label>
-            <input id="full-name" name="name" type="text" autocomplete="name" required
+            <input
+              id="full-name"
+              name="name"
+              type="text"
+              autocomplete="name"
+              required
               class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
-              placeholder="Full name">
+              placeholder="Full name"
+            />
           </div>
           <div>
             <label for="email-address" class="sr-only">Email address</label>
-            <input id="email-address" name="email" type="email" autocomplete="email" required
+            <input
+              id="email-address"
+              name="email"
+              type="email"
+              autocomplete="email"
+              required
               class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
-              placeholder="Email address">
+              placeholder="Email address"
+            />
           </div>
           <div>
             <label for="password" class="sr-only">Password</label>
-            <input id="password" name="password" type="password" autocomplete="new-password" required
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autocomplete="new-password"
+              required
               class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
-              placeholder="Password">
+              placeholder="Password"
+            />
           </div>
           <div>
-            <label for="confirm-password" class="sr-only">Confirm password</label>
-            <input id="confirm-password" name="confirm-password" type="password" autocomplete="new-password" required
+            <label for="confirm-password" class="sr-only"
+              >Confirm password</label
+            >
+            <input
+              id="confirm-password"
+              name="confirm-password"
+              type="password"
+              autocomplete="new-password"
+              required
               class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
-              placeholder="Confirm password">
+              placeholder="Confirm password"
+            />
           </div>
         </div>
 
         <div class="flex items-center">
-          <input id="terms" name="terms" type="checkbox" required
-            class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+          <input
+            id="terms"
+            name="terms"
+            type="checkbox"
+            required
+            class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+          />
           <label for="terms" class="ml-2 block text-sm text-gray-900">
             I agree to the
-            <a href="/terms" class="text-primary-600 hover:text-primary-500">Terms of Service</a>
+            <a href="/terms" class="text-primary-600 hover:text-primary-500"
+              >Terms of Service</a
+            >
             and
-            <a href="/privacy" class="text-primary-600 hover:text-primary-500">Privacy Policy</a>
+            <a href="/privacy" class="text-primary-600 hover:text-primary-500"
+              >Privacy Policy</a
+            >
           </label>
         </div>
 
         <div>
-          <button type="submit"
-            class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+          <button
+            type="submit"
+            class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+          >
             Create account
           </button>
         </div>
@@ -65,41 +109,55 @@ import MainLayout from "../layouts/MainLayout.astro";
 </MainLayout>
 
 <script>
-  import { getAuth, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+  import {
+    getAuth,
+    createUserWithEmailAndPassword,
+    updateProfile,
+  } from "firebase/auth";
   import { app } from "../utils/firebase";
+  import { getFirebaseErrorMessage } from "../utils/firebaseErrors";
 
   const auth = getAuth(app);
-  const registerForm = document.getElementById('register-form');
+  const registerForm = document.getElementById("register-form");
 
   if (registerForm) {
-    registerForm.addEventListener('submit', async (e) => {
+    registerForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      
-      const nameInput = document.getElementById('full-name') as HTMLInputElement;
-      const emailInput = document.getElementById('email-address') as HTMLInputElement;
-      const passwordInput = document.getElementById('password') as HTMLInputElement;
-      const confirmPasswordInput = document.getElementById('confirm-password') as HTMLInputElement;
-      
+
+      const nameInput = document.getElementById(
+        "full-name",
+      ) as HTMLInputElement;
+      const emailInput = document.getElementById(
+        "email-address",
+      ) as HTMLInputElement;
+      const passwordInput = document.getElementById(
+        "password",
+      ) as HTMLInputElement;
+      const confirmPasswordInput = document.getElementById(
+        "confirm-password",
+      ) as HTMLInputElement;
+
       if (passwordInput.value !== confirmPasswordInput.value) {
         alert("Passwords do not match");
         return;
       }
-      
+
       try {
         const userCredential = await createUserWithEmailAndPassword(
-          auth, 
-          emailInput.value, 
-          passwordInput.value
+          auth,
+          emailInput.value,
+          passwordInput.value,
         );
-        
+
         await updateProfile(userCredential.user, {
-          displayName: nameInput.value
+          displayName: nameInput.value,
         });
-        
-        window.location.href = '/dashboard';
+
+        window.location.href = "/dashboard";
       } catch (error) {
         console.error("Registration error:", error);
-        alert("Registration failed. Please try again.");
+        const message = getFirebaseErrorMessage(error);
+        alert(message); // Or use a toast
       }
     });
   }
