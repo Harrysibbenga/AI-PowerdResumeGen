@@ -1,6 +1,7 @@
 import os
 from typing import List, Optional, Union
-from pydantic import BaseSettings, validator, Field
+from pydantic_settings import BaseSettings
+from pydantic import validator, Field
 
 class Settings(BaseSettings):
     # Project settings
@@ -16,6 +17,17 @@ class Settings(BaseSettings):
     
     # Frontend URL for email links and redirects
     FRONTEND_URL: str = Field(default="http://localhost:3000", env="FRONTEND_URL")
+    
+    # JWT Settings
+    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "your-super-secret-jwt-key-change-this-in-production")
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60  # 1 hour
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7     # 7 days
+    REFRESH_TOKEN_EXPIRE_DAYS_REMEMBER: int = 30  # 30 days for remember me
+    
+    # Account Lockout Settings
+    MAX_FAILED_LOGIN_ATTEMPTS: int = 5
+    ACCOUNT_LOCKOUT_DURATION_MINUTES: int = 30
     
     # Authentication settings
     FIREBASE_SERVICE_ACCOUNT_PATH: str = os.getenv("FIREBASE_SERVICE_ACCOUNT_PATH", "")
@@ -190,6 +202,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "ignore" 
         # Allow arbitrary types for computed properties
         arbitrary_types_allowed = True
 

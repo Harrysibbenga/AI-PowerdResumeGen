@@ -5,9 +5,7 @@ import logging
 
 # Import your existing routers
 from app.api.v1 import resume, payments
-
-# Import the new refactored auth router
-from app.routers import auth
+from app.routes import auth
 
 from app.core.config import settings
 

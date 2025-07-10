@@ -2,9 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from pydantic import BaseModel
 from typing import Dict, Optional
 import stripe
-import json
 from app.core.config import settings
-from app.routers.auth import get_current_user
+from app.dependencies.auth_dependencies import get_current_user
 from app.core.firebase import db
 
 # Initialize Stripe

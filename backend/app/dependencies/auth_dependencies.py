@@ -4,7 +4,7 @@ Authentication dependencies for FastAPI
 from fastapi import Depends, HTTPException, status, Request
 from typing import Dict, Any
 from app.helpers.auth_helpers import AuthHelpers
-from app.models.auth_models import TokenData
+from app.models.auth import TokenData
 from app.core.config import settings
 
 async def get_current_user(request: Request) -> Dict[str, Any]:
@@ -193,3 +193,79 @@ class RateLimitDependency:
 rate_limit_auth = RateLimitDependency(max_requests=5, window_seconds=60)  # 5 requests per minute
 rate_limit_email = RateLimitDependency(max_requests=3, window_seconds=300)  # 3 requests per 5 minutes
 rate_limit_2fa = RateLimitDependency(max_requests=5, window_seconds=300)  # 5 requests per 5 minutes
+
+
+async def get_jwt_user(request: Request) -> Dict[str, Any]:
+    """
+    Dependency to get current authenticated user using JWT tokens
+    
+    Args:
+        request: FastAPI request object
+        
+    Returns:
+        Dict: Decoded token data
+        
+    Raises:
+        HTTPException: If authentication fails or session expired
+    """
+    # Extract Bearer token from Authorization header
+    token = await AuthHelpers.extract_bearer_token(request)
+    
+    # Verify JWT token
+    payload = AuthHelpers.verify_jwt_token(token, "access")
+    
+    # Check if user still exists
+    user_doc = await AuthHelpers.get_user_document(payload["uid"])
+    if not user_doc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found"
+        )
+    
+    # Update last activity
+    await AuthHelpers.update_last_activity(payload["uid"])
+    
+    return {
+        "uid": payload["uid"],
+        "email": payload["email"],
+        "user_doc": user_doc
+    }
+
+async def get_jwt_verified_user(user_data: Dict = Depends(get_jwt_user)) -> Dict[str, Any]:
+    """
+    Dependency to get current authenticated user with email verification check using JWT
+    
+    Args:
+        user_data: Current user data from get_jwt_user
+        
+    Returns:
+        Dict: User data
+        
+    Raises:
+        HTTPException: If user email is not verified
+    """
+    user_doc = user_data["user_doc"]
+    
+    if not user_doc.get("email_verified", False):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Email verification required"
+        )
+    
+    return user_data
+
+async def optional_jwt_auth(request: Request) -> Dict[str, Any] | None:
+    """
+    Optional JWT authentication dependency
+    Returns user data if authenticated, None otherwise
+    
+    Args:
+        request: FastAPI request object
+        
+    Returns:
+        Dict or None: User data if authenticated, None otherwise
+    """
+    try:
+        return await get_jwt_user(request)
+    except HTTPException:
+        return None
