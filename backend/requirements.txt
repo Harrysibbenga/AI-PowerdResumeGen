@@ -1,11 +1,44 @@
-fastapi==0.95.0
-uvicorn==0.21.1
-firebase-admin==6.1.0
-pydantic==1.10.7
-httpx==0.24.0
-python-dotenv==1.0.0
-python-multipart==0.0.6
-weasyprint==59.0
-python-docx==0.8.11
-stripe==5.4.0
-gunicorn==20.1.0
+# 🔐 Core & API Framework
+fastapi
+uvicorn
+starlette
+
+# 🔧 Validation & Settings
+pydantic
+pydantic-settings
+
+# 🔥 Firebase Admin SDK
+firebase-admin
+
+# 🔑 Auth & Security
+PyJWT
+pyotp
+
+# Stripe
+stripe
+
+# 📦 HTTP Clients & Requests
+httpx
+requests
+
+# 📚 Google Cloud
+google-api-python-client
+google-auth
+google-cloud-firestore
+
+# 📄 Document & Email
+python-docx
+python-dotenv
+email_validator
+
+# 🖼️ QR / PDF / Image generation
+qrcode[pil]
+weasyprint
+pillow
+
+# Optional utilities
+python-multipart
+cryptography
+setuptools
+
+

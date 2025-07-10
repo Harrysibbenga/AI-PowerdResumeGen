@@ -1,18 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel
-import firebase_admin
-from firebase_admin import firestore
-from app.api.v1.auth import get_current_user
+from app.dependencies.auth_dependencies import get_current_user
 from app.services.gpt_service import generate_resume_with_gpt
 from app.services.deepseek_service import generate_resume_with_deepseek
 from app.services.export_service import export_to_pdf, export_to_docx
 from app.core.config import settings
 import uuid
 from datetime import datetime
+from app.core.firebase import db
 
 router = APIRouter()
-db = firestore.client()
 
 # Models
 class Experience(BaseModel):

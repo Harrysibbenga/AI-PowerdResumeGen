@@ -2,16 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from pydantic import BaseModel
 from typing import Dict, Optional
 import stripe
-import json
 from app.core.config import settings
-from app.api.v1.auth import get_current_user
-from firebase_admin import firestore
+from app.dependencies.auth_dependencies import get_current_user
+from app.core.firebase import db
 
 # Initialize Stripe
 stripe.api_key = settings.STRIPE_API_KEY
 
 router = APIRouter()
-db = firestore.client()
 
 # Models
 class CheckoutSessionRequest(BaseModel):
