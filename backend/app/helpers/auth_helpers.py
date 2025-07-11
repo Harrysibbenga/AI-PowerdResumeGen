@@ -3,6 +3,7 @@ import hashlib
 import jwt
 import re
 import logging
+import pyotp
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, Tuple, List
 from fastapi import HTTPException, status, Request
@@ -242,6 +243,24 @@ class AuthHelpers:
             return {"locked": False, "failed_attempts": failed_attempts}
         except Exception:
             return {"locked": False}
+        
+    @staticmethod
+    def verify_2fa_code(secret: str, code: str) -> bool:
+        """
+        Verifies a 2FA code using the user's shared TOTP secret.
+
+        Args:
+            secret (str): The user's 2FA secret key.
+            code (str): The 6-digit 2FA code provided by the user.
+
+        Returns:
+            bool: True if the code is valid, False otherwise.
+        """
+        try:
+            totp = pyotp.TOTP(secret)
+            return totp.verify(code, valid_window=1)  # ±30s window
+        except Exception:
+            return False
 
     @staticmethod
     async def handle_failed_login(user_id: str) -> None:
