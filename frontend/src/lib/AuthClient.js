@@ -1,84 +1,107 @@
-import { getAuth, signInWithEmailAndPassword, signOut } from "firebase/auth";
-import { initFirebase } from "@/utils/firebase";
+import { signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { getFirebaseAuth } from "@/utils/firebase";
+import { API_BASE_URL } from "../utils/api";
 import axios from "axios";
 
 class AuthClient {
   constructor() {
-    this.auth = null;
     this.api = axios.create({
-      baseURL: "/api/v1/auth"
+      baseURL: `${API_BASE_URL}/api/v1/auth`
     });
   }
 
-  async init() {
-    if (!this.auth) {
-      const firebaseApp = initFirebase();
-      this.auth = getAuth(firebaseApp);
-    }
+  getAuth() {
+    return getFirebaseAuth();
   }
 
   async login(email, password, rememberMe = false) {
-    await this.init();
+    try {
+      const auth = this.getAuth();
+      console.log('Attempting Firebase login...');
+      
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const idToken = await userCredential.user.getIdToken();
 
-    const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
-    const idToken = await userCredential.user.getIdToken();
+      console.log('Firebase login successful, calling backend...');
+      
+      const res = await this.api.post("/login", {
+        id_token: idToken,
+        remember_me: rememberMe
+      });
 
-    const res = await this.api.post("/login", {
-      id_token: idToken,
-      remember_me: rememberMe
-    });
+      if (res.data.requires_2fa) {
+        return {
+          status: "2fa_required",
+          user: res.data.user
+        };
+      }
 
-    if (res.data.requires_2fa) {
+      this._storeTokens(res.data);
       return {
-        status: "2fa_required",
+        status: "success",
         user: res.data.user
       };
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
     }
-
-    this._storeTokens(res.data);
-    return {
-      status: "success",
-      user: res.data.user
-    };
   }
 
   async loginWith2FA(idToken, twoFactorCode, rememberMe = false) {
-    const res = await this.api.post("/login/2fa", {
-      id_token: idToken,
-      two_factor_code: twoFactorCode,
-      remember_me: rememberMe
-    });
+    try {
+      const res = await this.api.post("/login/2fa", {
+        id_token: idToken,
+        two_factor_code: twoFactorCode,
+        remember_me: rememberMe
+      });
 
-    this._storeTokens(res.data);
-    return {
-      status: "success",
-      user: res.data.user
-    };
+      this._storeTokens(res.data);
+      return {
+        status: "success",
+        user: res.data.user
+      };
+    } catch (error) {
+      console.error('2FA login error:', error);
+      throw error;
+    }
   }
 
   async refreshToken(refreshToken) {
-    const res = await this.api.post("/refresh", {
-      refresh_token: refreshToken
-    });
+    try {
+      const res = await this.api.post("/refresh", {
+        refresh_token: refreshToken
+      });
 
-    this._storeTokens(res.data);
-    return res.data;
+      this._storeTokens(res.data);
+      return res.data;
+    } catch (error) {
+      console.error('Token refresh error:', error);
+      throw error;
+    }
   }
 
   async logoutAllDevices() {
-    await this.api.post("/logout/all", {}, {
-      headers: {
-        Authorization: `Bearer ${this.getAccessToken()}`
-      }
-    });
+    try {
+      await this.api.post("/logout/all", {}, {
+        headers: {
+          Authorization: `Bearer ${this.getAccessToken()}`
+        }
+      });
 
-    await this.init();
-    await signOut(this.auth);
-    this._clearTokens();
+      const auth = this.getAuth();
+      await signOut(auth);
+      this._clearTokens();
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Clear tokens even if API call fails
+      this._clearTokens();
+      throw error;
+    }
   }
 
   getCurrentUser() {
-    return this.auth?.currentUser ?? null;
+    const auth = this.getAuth();
+    return auth?.currentUser ?? null;
   }
 
   getAccessToken() {

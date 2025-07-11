@@ -2,6 +2,7 @@ from .email_verification import *
 from .login import *
 from .password_reset import *
 from .responses import *
+from .register import *
 from .session import *
 from .token import *
 from .two_factor import *

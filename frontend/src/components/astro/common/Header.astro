@@ -1,10 +1,8 @@
 ---
+// Header.astro
 import Logo from "./Logo.astro";
 import MainNav from "./MainNav.astro";
 import AuthButtons from "@/components/vue/common/AuthButtons.vue";
-import { useFirebase } from "@/composables/useFirebase";
-
-const { user, isAuthenticated, logout } = await useFirebase();
 ---
 
 <header class="bg-white shadow-sm">
@@ -12,11 +10,7 @@ const { user, isAuthenticated, logout } = await useFirebase();
         <Logo />
         <div class="flex items-center gap-6">
             <MainNav />
-            <AuthButtons
-                isAuthenticated={isAuthenticated}
-                user={user}
-                logout={logout}
-            />
+            <AuthButtons client:load />
         </div>
     </div>
 </header>

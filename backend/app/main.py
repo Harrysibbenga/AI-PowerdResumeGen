@@ -46,23 +46,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include API routers
-# Note: Updated auth router with new structure
 app.include_router(
     auth.router, 
-    prefix="/api/v1/auth", 
-    tags=["authentication"]
+    prefix="/api/v1/auth",
+    tags=["auth"]
 )
 
 app.include_router(
     resume.router, 
-    prefix="/api/v1", 
+    prefix="/api/v1/resume",
     tags=["resume"]
 )
 
 app.include_router(
     payments.router, 
-    prefix="/api/v1", 
+    prefix="/api/v1/payments",
     tags=["payments"]
 )
 

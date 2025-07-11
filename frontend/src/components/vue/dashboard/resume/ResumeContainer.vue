@@ -11,26 +11,17 @@
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <!-- Authentication Loading State -->
+      <!-- Loading State -->
       <div
-        v-if="isAuthLoading || !authInitialized"
+        v-if="loading || !authInitialized"
         class="col-span-full flex justify-center items-center py-12"
       >
         <div
           class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"
         ></div>
-        <span class="ml-2 text-gray-600">Checking authentication...</span>
-      </div>
-
-      <!-- Resume Loading State -->
-      <div
-        v-else-if="loading"
-        class="col-span-full flex justify-center items-center py-12"
-      >
-        <div
-          class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"
-        ></div>
-        <span class="ml-2 text-gray-600">Loading resumes...</span>
+        <span class="ml-2 text-gray-600">
+          {{ !authInitialized ? "Initializing..." : "Loading resumes..." }}
+        </span>
       </div>
 
       <!-- Error State -->
@@ -47,7 +38,7 @@
       </div>
 
       <!-- Empty State -->
-      <NoResumesFound v-else-if="!loading && resumes.length === 0" />
+      <NoResumesFound v-else-if="resumes.length === 0" />
 
       <!-- Resume Grid -->
       <ResumeCard
@@ -61,158 +52,126 @@
   </div>
 </template>
 
-<script>
-import { ref, onMounted, onUnmounted, watch } from "vue";
+<script setup>
+import { ref, onMounted, watch } from "vue";
 import { useFirebase } from "@/composables/useFirebase";
+import { useToast } from "@/composables/useToast";
 import NoResumesFound from "./NoResumesFound.vue";
 import ResumeCard from "./ResumeCard.vue";
 
-export default {
-  name: "ResumeContainer",
-  components: {
-    NoResumesFound,
-    ResumeCard,
-  },
-  setup() {
-    const resumes = ref([]);
-    const loading = ref(false); // Start with false since auth loading handles initial state
-    const error = ref(null);
+const resumes = ref([]);
+const loading = ref(false);
+const error = ref(null);
 
-    const {
-      user,
-      isLoading: isAuthLoading,
-      isAuthenticated,
-      authInitialized,
-      initAuth,
-      getFirebaseAuth,
-      waitForAuth,
-      cleanup,
-    } = useFirebase();
+const { user, isAuthenticated, authInitialized, initAuth, waitForAuth } = useFirebase();
+const { success, error: showError } = useToast();
 
-    const fetchResumes = async () => {
-      try {
-        console.log("Starting to fetch resumes...");
-        loading.value = true;
-        error.value = null;
+const API_URL = import.meta.env.PUBLIC_API_URL || "http://localhost:8000";
 
-        // Wait for authentication to be ready
-        const currentUser = await waitForAuth();
-        console.log("Auth ready, user:", currentUser ? "logged in" : "not logged in");
+const fetchResumes = async () => {
+  try {
+    loading.value = true;
+    error.value = null;
 
-        if (!currentUser) {
-          console.log("No user found, redirecting to login");
-          window.location.href = "/login";
-          return;
-        }
+    // Wait for authentication
+    const currentUser = await waitForAuth();
 
-        const auth = await getFirebaseAuth();
-        const idToken = await currentUser.getIdToken();
-        const API_URL = import.meta.env.VITE_API_URL || import.meta.env.PUBLIC_API_URL;
+    if (!currentUser) {
+      showError("Please log in to view your resumes");
+      setTimeout(() => (window.location.href = "/login"), 1500);
+      return;
+    }
 
-        console.log("Making API request to:", `${API_URL}/api/v1/resumes`);
+    // Get fresh token
+    const idToken = await currentUser.getIdToken();
 
-        const response = await fetch(`${API_URL}/api/v1/resumes`, {
-          headers: {
-            Authorization: `Bearer ${idToken}`,
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch resumes: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log("Resumes fetched:", data);
-        resumes.value = data || [];
-      } catch (err) {
-        console.error("Error fetching resumes:", err);
-        error.value = err.message || "Failed to load resumes";
-
-        // If user is not authenticated, redirect to login
-        if (err.message.includes("Not logged in")) {
-          window.location.href = "/login";
-        }
-      } finally {
-        loading.value = false;
-        console.log("Fetch resumes completed");
-      }
-    };
-
-    const handleDeleteResume = async (resumeId) => {
-      try {
-        const currentUser = await waitForAuth();
-        if (!currentUser) return;
-
-        const auth = await getFirebaseAuth();
-        const idToken = await currentUser.getIdToken();
-        const API_URL = import.meta.env.VITE_API_URL || import.meta.env.PUBLIC_API_URL;
-
-        const response = await fetch(`${API_URL}/api/v1/resumes/${resumeId}`, {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${idToken}`,
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to delete resume");
-        }
-
-        // Remove from local state
-        resumes.value = resumes.value.filter((resume) => resume.id !== resumeId);
-      } catch (err) {
-        console.error("Error deleting resume:", err);
-        alert("Failed to delete resume. Please try again.");
-      }
-    };
-
-    // Watch for authentication changes
-    watch(
-      [authInitialized, isAuthenticated],
-      ([initialized, authenticated]) => {
-        console.log(
-          "Auth state watch triggered - initialized:",
-          initialized,
-          "authenticated:",
-          authenticated
-        );
-
-        if (initialized) {
-          if (authenticated) {
-            console.log("User is authenticated, fetching resumes");
-            fetchResumes();
-          } else {
-            console.log("User not authenticated, redirecting to login");
-            window.location.href = "/login";
-          }
-        }
+    const response = await fetch(`${API_URL}/api/v1/resume`, {
+      headers: {
+        Authorization: `Bearer ${idToken}`,
+        "Content-Type": "application/json",
       },
-      { immediate: true }
-    );
-
-    onMounted(async () => {
-      console.log("ResumeContainer mounted, initializing auth...");
-      await initAuth();
     });
 
-    onUnmounted(() => {
-      cleanup();
-    });
+    if (!response.ok) {
+      if (response.status === 401) {
+        showError("Session expired. Please log in again.");
+        setTimeout(() => (window.location.href = "/login"), 1500);
+        return;
+      }
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
 
-    return {
-      resumes,
-      loading,
-      error,
-      fetchResumes,
-      handleDeleteResume,
-      isAuthLoading,
-      isAuthenticated,
-      authInitialized,
-    };
-  },
+    const data = await response.json();
+    resumes.value = Array.isArray(data) ? data : data.resumes || [];
+  } catch (err) {
+    console.error("Error fetching resumes:", err);
+    error.value = err.message || "Failed to load resumes";
+    showError("Failed to load resumes");
+  } finally {
+    loading.value = false;
+  }
 };
+
+const handleDeleteResume = async (resumeId) => {
+  if (!confirm("Are you sure you want to delete this resume?")) {
+    return;
+  }
+
+  try {
+    const currentUser = await waitForAuth();
+    if (!currentUser) {
+      showError("Please log in to delete resumes");
+      return;
+    }
+
+    const idToken = await currentUser.getIdToken();
+
+    const response = await fetch(`${API_URL}/api/v1/resume/${resumeId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${idToken}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    // Remove from local state
+    resumes.value = resumes.value.filter((resume) => resume.id !== resumeId);
+    success("Resume deleted successfully");
+  } catch (err) {
+    console.error("Error deleting resume:", err);
+    showError("Failed to delete resume. Please try again.");
+  }
+};
+
+// Initialize auth and watch for changes
+onMounted(async () => {
+  try {
+    await initAuth();
+  } catch (error) {
+    console.error("Failed to initialize auth:", error);
+    showError("Authentication initialization failed");
+  }
+});
+
+// Watch for authentication state changes
+watch(
+  [authInitialized, isAuthenticated],
+  ([initialized, authenticated]) => {
+    if (initialized) {
+      if (authenticated) {
+        fetchResumes();
+      } else {
+        showError("Please log in to access your resumes");
+        setTimeout(() => (window.location.href = "/login"), 2000);
+      }
+    }
+  },
+  { immediate: true }
+);
 </script>
 
 <style scoped>
