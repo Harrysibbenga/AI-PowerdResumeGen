@@ -1,3 +1,4 @@
+from .change_password  import *
 from .email_verification import *
 from .login import *
 from .password_reset import *
@@ -7,3 +8,4 @@ from .session import *
 from .token import *
 from .two_factor import *
 from .user import *
+from .validation import *

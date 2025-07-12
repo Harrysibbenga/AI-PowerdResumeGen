@@ -31,6 +31,7 @@
       @success="$emit('update-success', $event)"
       @error="$emit('update-error', $event)"
     />
+
     <ChangePasswordModal
       v-if="showPassword"
       :user="user"

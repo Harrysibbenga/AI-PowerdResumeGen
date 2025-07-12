@@ -17,7 +17,7 @@
 
 <script setup>
 import { ref } from "vue";
-import { authClient } from "@/lib/AuthClient";
+import { authClient } from "@/services";
 import { useFirebase } from "@/composables/useFirebase";
 import { getFirebaseErrorMessage } from "@/utils/getFirebaseErrorMessage";
 
