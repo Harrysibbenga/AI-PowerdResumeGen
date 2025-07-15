@@ -4,8 +4,8 @@ from contextlib import asynccontextmanager
 import logging
 
 # Import your existing routers
-from app.api.v1 import resume, payments
-from app.routes import auth
+from app.api.v1 import payments
+from app.routes import auth, resume
 
 from app.core.config import settings
 

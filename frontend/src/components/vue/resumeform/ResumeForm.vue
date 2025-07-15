@@ -16,11 +16,11 @@
 
     <!-- Form Sections -->
     <div v-else class="space-y-8">
-      <!-- Resume Title Section -->
+      <!-- Resume Details Section -->
       <div class="bg-white p-6 rounded-lg border border-gray-200">
         <h3 class="text-lg font-semibold text-gray-900 mb-4">Resume Details</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
+          <div class="md:col-span-2">
             <label for="resumeTitle" class="block text-sm font-medium text-gray-700 mb-2">
               Resume Title *
             </label>
@@ -34,21 +34,72 @@
             />
           </div>
           <div>
-            <label for="targetRole" class="block text-sm font-medium text-gray-700 mb-2">
-              Target Role
+            <label
+              for="targetJobTitle"
+              class="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Target Job Title *
             </label>
             <input
-              id="targetRole"
-              v-model="form.targetRole"
+              id="targetJobTitle"
+              v-model="form.targetJobTitle"
               type="text"
               placeholder="e.g., Senior Software Engineer"
               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              required
             />
+          </div>
+          <div>
+            <label
+              for="targetJobRole"
+              class="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Target Job Role/Level
+            </label>
+            <select
+              id="targetJobRole"
+              v-model="form.targetJobRole"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            >
+              <option value="">Select level (optional)</option>
+              <option value="Entry Level">Entry Level</option>
+              <option value="Junior">Junior</option>
+              <option value="Mid-Level">Mid-Level</option>
+              <option value="Senior">Senior</option>
+              <option value="Lead">Lead</option>
+              <option value="Principal">Principal</option>
+              <option value="Manager">Manager</option>
+              <option value="Senior Manager">Senior Manager</option>
+              <option value="Director">Director</option>
+              <option value="VP">VP</option>
+              <option value="C-Level">C-Level</option>
+            </select>
+          </div>
+          <div class="md:col-span-2">
+            <label
+              for="targetCompany"
+              class="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Target Company (Optional)
+            </label>
+            <input
+              id="targetCompany"
+              v-model="form.targetCompany"
+              type="text"
+              placeholder="e.g., Google, Microsoft, or leave blank for general use"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            />
+            <p class="text-xs text-gray-500 mt-1">
+              Optionally specify a target company to tailor the resume content
+            </p>
           </div>
         </div>
       </div>
 
+      <!-- Personal Information -->
       <PersonalInfoSection v-model="form" />
+
+      <!-- Industry Selection -->
       <IndustrySelector v-model="form.industry" @industryChanged="handleIndustryChange" />
 
       <!-- Professional Summary Section -->
@@ -72,10 +123,153 @@
         </div>
       </div>
 
+      <!-- AI Generation Settings -->
+      <div class="bg-white p-6 rounded-lg border border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Resume Settings</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label for="tone" class="block text-sm font-medium text-gray-700 mb-2">
+              Tone
+            </label>
+            <select
+              id="tone"
+              v-model="form.tone"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            >
+              <option value="professional">Professional</option>
+              <option value="creative">Creative</option>
+              <option value="formal">Formal</option>
+              <option value="casual">Casual</option>
+            </select>
+          </div>
+          <div>
+            <label for="length" class="block text-sm font-medium text-gray-700 mb-2">
+              Length
+            </label>
+            <select
+              id="length"
+              v-model="form.length"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            >
+              <option value="short">Short (1 page)</option>
+              <option value="standard">Standard (1-2 pages)</option>
+              <option value="detailed">Detailed (2+ pages)</option>
+            </select>
+          </div>
+          <div>
+            <label for="template" class="block text-sm font-medium text-gray-700 mb-2">
+              Template
+            </label>
+            <select
+              id="template"
+              v-model="form.templateId"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            >
+              <option value="modern">Modern</option>
+              <option value="classic">Classic</option>
+              <option value="creative">Creative</option>
+              <option value="minimal">Minimal</option>
+              <option value="executive">Executive</option>
+            </select>
+          </div>
+        </div>
+        <div class="mt-4">
+          <label for="focusKeywords" class="block text-sm font-medium text-gray-700 mb-2">
+            Focus Keywords (Optional)
+          </label>
+          <input
+            id="focusKeywords"
+            v-model="form.focusKeywords"
+            type="text"
+            placeholder="e.g., machine learning, cloud computing, agile"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          />
+          <p class="text-xs text-gray-500 mt-1">
+            Keywords to emphasize throughout the resume (comma-separated)
+          </p>
+        </div>
+      </div>
+
+      <!-- Include Sections -->
+      <div class="bg-white p-6 rounded-lg border border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Include Sections</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <label class="flex items-center">
+            <input
+              type="checkbox"
+              v-model="form.includeProjects"
+              class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+            />
+            <span class="ml-2 text-sm text-gray-700">Include Projects</span>
+          </label>
+          <label class="flex items-center">
+            <input
+              type="checkbox"
+              v-model="form.includeCertifications"
+              class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+            />
+            <span class="ml-2 text-sm text-gray-700">Include Certifications</span>
+          </label>
+          <label class="flex items-center">
+            <input
+              type="checkbox"
+              v-model="form.includeLanguages"
+              class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+            />
+            <span class="ml-2 text-sm text-gray-700">Include Languages</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Skills and Certifications -->
       <SkillsInput v-model="form.skills" :industry="form.industry" />
-      <CertificationsInput v-model="form.certifications" :industry="form.industry" />
+      <CertificationsInput
+        v-if="form.includeCertifications"
+        v-model="form.certifications"
+        :industry="form.industry"
+      />
+
+      <!-- Work Experience -->
       <WorkExperienceInput v-model="form.workExperience" />
+
+      <!-- Education -->
       <EducationInput v-model="form.education" />
+
+      <!-- Projects -->
+      <ProjectsInput v-if="form.includeProjects" v-model="form.projects" />
+
+      <!-- Languages -->
+      <div v-if="form.includeLanguages" class="bg-gray-50 p-6 rounded-md">
+        <h2 class="text-xl font-semibold mb-4">Languages</h2>
+        <div class="space-y-2">
+          <div
+            v-for="(language, index) in form.languages"
+            :key="index"
+            class="flex items-center"
+          >
+            <input
+              v-model="form.languages[index]"
+              type="text"
+              placeholder="e.g., Spanish (Fluent), French (Intermediate)"
+              class="flex-1 px-3 py-2 border border-gray-300 rounded-md"
+            />
+            <button
+              type="button"
+              @click="removeLanguage(index)"
+              class="ml-2 text-red-600 hover:text-red-800"
+            >
+              Remove
+            </button>
+          </div>
+        </div>
+        <button
+          type="button"
+          @click="form.languages.push('')"
+          class="mt-2 text-blue-600 hover:text-blue-800"
+        >
+          + Add Language
+        </button>
+      </div>
 
       <!-- Submit Button -->
       <div class="flex justify-center pt-6">
@@ -124,6 +318,7 @@ import SkillsInput from "./SkillsInput.vue";
 import CertificationsInput from "./CertificationsInput.vue";
 import WorkExperienceInput from "./WorkExperienceInput.vue";
 import EducationInput from "./EducationInput.vue";
+import ProjectsInput from "./ProjectsInput.vue";
 
 import { capitalize } from "@/utils/formatters.js";
 import { defaultForm } from "@/utils/defaultForm.js";
@@ -133,7 +328,9 @@ const error = ref("");
 const form = ref({
   // Resume metadata
   title: "",
-  targetRole: "",
+  targetJobTitle: "",
+  targetJobRole: "",
+  targetCompany: "",
   summary: "",
 
   // Personal info
@@ -142,11 +339,14 @@ const form = ref({
   phone: "",
   linkedin: "",
   location: "",
+  website: "",
+  github: "",
 
   // Professional details
   industry: "",
   skills: [""],
   certifications: [""],
+  languages: [""],
 
   // Experience and education
   workExperience: [
@@ -168,6 +368,30 @@ const form = ref({
       description: "",
     },
   ],
+
+  // Projects
+  projects: [
+    {
+      title: "",
+      description: "",
+      technologies: [],
+      url: "",
+      startDate: "",
+      endDate: "",
+      highlights: [""],
+    },
+  ],
+
+  // AI Generation settings
+  tone: "professional",
+  length: "standard",
+  templateId: "modern",
+  focusKeywords: "",
+
+  // Include sections
+  includeProjects: true,
+  includeCertifications: true,
+  includeLanguages: false,
 });
 
 const { waitForAuth } = useFirebase();
@@ -179,6 +403,7 @@ const API_URL = import.meta.env.PUBLIC_API_URL || "http://localhost:8000";
 const isFormValid = computed(() => {
   return (
     form.value.title.trim() &&
+    form.value.targetJobTitle.trim() &&
     form.value.fullName.trim() &&
     form.value.email.trim() &&
     form.value.industry.trim()
@@ -188,8 +413,15 @@ const isFormValid = computed(() => {
 // Methods
 const handleIndustryChange = () => {
   // Update target role suggestion based on industry
-  if (form.value.industry && !form.value.targetRole) {
+  if (form.value.industry && !form.value.targetJobTitle) {
     // You can add logic here to suggest roles based on industry
+  }
+};
+
+const removeLanguage = (index) => {
+  form.value.languages.splice(index, 1);
+  if (form.value.languages.length === 0) {
+    form.value.languages.push("");
   }
 };
 
@@ -198,12 +430,19 @@ const formatFormData = () => {
   form.value.fullName = capitalize(form.value.fullName);
   form.value.location = capitalize(form.value.location);
   form.value.title = form.value.title.trim();
-  form.value.targetRole = form.value.targetRole.trim();
+  form.value.targetJobTitle = form.value.targetJobTitle.trim();
+  form.value.targetJobRole = form.value.targetJobRole.trim();
+  form.value.targetCompany = form.value.targetCompany.trim();
   form.value.summary = form.value.summary.trim();
 
-  // Filter out empty skills and certifications
+  // Filter out empty arrays
   form.value.skills = form.value.skills.filter((s) => s.trim());
-  form.value.certifications = form.value.certifications.filter((c) => c.trim());
+  if (form.value.includeCertifications) {
+    form.value.certifications = form.value.certifications.filter((c) => c.trim());
+  }
+  if (form.value.includeLanguages) {
+    form.value.languages = form.value.languages.filter((l) => l.trim());
+  }
 
   // Format work experience
   form.value.workExperience.forEach((job) => {
@@ -218,6 +457,14 @@ const formatFormData = () => {
     edu.school = capitalize(edu.school);
     edu.location = capitalize(edu.location);
   });
+
+  // Format projects
+  if (form.value.includeProjects) {
+    form.value.projects.forEach((project) => {
+      project.title = capitalize(project.title);
+      project.highlights = project.highlights.filter((h) => h.trim());
+    });
+  }
 };
 
 const generateAutoSummary = () => {
@@ -229,7 +476,7 @@ const generateAutoSummary = () => {
   const experience = form.value.workExperience.filter((exp) => exp.title && exp.company);
   const skills = form.value.skills.filter((skill) => skill.trim());
   const yearsExp = experience.length > 0 ? `${experience.length}+ years of` : "";
-  const role = form.value.targetRole || form.value.industry || "professional";
+  const role = form.value.targetJobTitle || form.value.industry || "professional";
 
   return `${yearsExp} experience as a ${role} with expertise in ${skills
     .slice(0, 3)
@@ -254,9 +501,9 @@ const handleSubmit = async () => {
     const resumeData = {
       // Resume metadata
       title: form.value.title,
-      summary: generateAutoSummary(),
-      industry: form.value.industry,
-      job_title: form.value.targetRole,
+      target_job_title: form.value.targetJobTitle,
+      target_job_role: form.value.targetJobRole || null,
+      target_company: form.value.targetCompany || null,
 
       // Profile data for AI processing
       profile: {
@@ -265,7 +512,9 @@ const handleSubmit = async () => {
         phone: form.value.phone,
         linkedin: form.value.linkedin,
         location: form.value.location,
-        summary: form.value.summary,
+        website: form.value.website,
+        github: form.value.github,
+        professional_summary: form.value.summary,
 
         // Work experience
         experience: form.value.workExperience
@@ -277,6 +526,7 @@ const handleSubmit = async () => {
             startDate: exp.startDate,
             endDate: exp.endDate || null,
             description: exp.description,
+            current: !exp.endDate,
           })),
 
         // Education
@@ -293,15 +543,38 @@ const handleSubmit = async () => {
             description: edu.description,
           })),
 
-        // Skills and certifications
+        // Projects (if included)
+        projects: form.value.includeProjects
+          ? form.value.projects
+              .filter((proj) => proj.title && proj.description)
+              .map((proj) => ({
+                title: proj.title,
+                description: proj.description,
+                technologies: proj.technologies,
+                url: proj.url,
+                startDate: proj.startDate,
+                endDate: proj.endDate,
+                highlights: proj.highlights,
+              }))
+          : [],
+
+        // Skills and other details
         skills: form.value.skills,
-        certifications: form.value.certifications.filter((cert) => cert.trim()),
+        certifications: form.value.includeCertifications ? form.value.certifications : [],
+        languages: form.value.includeLanguages ? form.value.languages : [],
         industry: form.value.industry,
       },
 
       // AI generation settings
-      tone: "professional",
-      template_id: "modern", // You can make this configurable
+      tone: form.value.tone,
+      length: form.value.length,
+      template_id: form.value.templateId,
+      focus_keywords: form.value.focusKeywords || null,
+
+      // Include options
+      include_projects: form.value.includeProjects,
+      include_certifications: form.value.includeCertifications,
+      include_languages: form.value.includeLanguages,
     };
 
     const response = await fetch(`${API_URL}/api/v1/resume`, {

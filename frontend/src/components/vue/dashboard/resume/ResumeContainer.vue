@@ -47,6 +47,7 @@
         :key="resume.id"
         :resume="resume"
         @delete="handleDeleteResume"
+        @view="viewResume"
       />
     </div>
   </div>
@@ -112,7 +113,12 @@ const fetchResumes = async () => {
   }
 };
 
-const handleDeleteResume = async (resumeId) => {
+// Event handlers
+const viewResume = (resume) => {
+  window.location.href = `/preview?id=${resume.id}`;
+};
+
+const handleDeleteResume = async (resume) => {
   if (!confirm("Are you sure you want to delete this resume?")) {
     return;
   }
@@ -126,7 +132,7 @@ const handleDeleteResume = async (resumeId) => {
 
     const idToken = await currentUser.getIdToken();
 
-    const response = await fetch(`${API_URL}/api/v1/resume/${resumeId}`, {
+    const response = await fetch(`${API_URL}/api/v1/resume/${resume.id}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${idToken}`,
@@ -139,7 +145,7 @@ const handleDeleteResume = async (resumeId) => {
     }
 
     // Remove from local state
-    resumes.value = resumes.value.filter((resume) => resume.id !== resumeId);
+    resumes.value = resumes.value.filter((resume) => resume.id !== resume.id);
     success("Resume deleted successfully");
   } catch (err) {
     console.error("Error deleting resume:", err);
