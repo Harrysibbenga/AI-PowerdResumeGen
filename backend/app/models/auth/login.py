@@ -15,3 +15,8 @@ class Login2FARequest(LoginRequest):
 
 class RefreshTokenRequest(BaseModel):
     refresh_token: str
+    
+class LoginRequestToken(BaseModel):
+    id_token: str
+    remember_me: bool = False
+

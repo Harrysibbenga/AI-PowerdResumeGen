@@ -1,92 +1,94 @@
-import { ref, computed } from 'vue'
-import { getAuth, onAuthStateChanged } from 'firebase/auth'
+import { ref, computed } from "vue";
+import { onAuthStateChanged } from "firebase/auth";
+import { getFirebaseAuth } from "@/utils/firebase";
 
-// Import your Firebase app configuration
-let firebaseApp = null
-let auth = null
+const user = ref(null);
+const isLoading = ref(true);
+const isAuthenticated = computed(() => !!user.value);
+const authInitialized = ref(false);
 
-// Initialize Firebase lazily
-const initFirebase = async () => {
-  if (firebaseApp) return firebaseApp
-
-  try {
-    // Dynamic import to ensure Firebase is only loaded on the client
-    const { app } = await import('@/utils/firebase')
-    firebaseApp = app
-    auth = getAuth(firebaseApp)
-    return firebaseApp
-  } catch (error) {
-    console.error('Failed to initialize Firebase:', error)
-    throw error
-  }
-}
-
-// Reactive user state
-const user = ref(null)
-const isLoading = ref(true)
-const isAuthenticated = computed(() => !!user.value)
-const authInitialized = ref(false)
-
-// Auth state listener
-let unsubscribe = null
+let unsubscribe = null;
+let isInitializing = false;
 
 export const useFirebase = () => {
   const initAuth = async () => {
+    if (authInitialized.value || isInitializing) {
+      return;
+    }
+
+    isInitializing = true;
+
     try {
-      await initFirebase()
-      
-      if (unsubscribe) return // Already listening
+      console.log('Initializing Firebase auth...');
+      const auth = getFirebaseAuth();
+
+      if (unsubscribe) {
+        unsubscribe();
+      }
 
       unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-        console.log('Auth state changed:', firebaseUser ? 'User logged in' : 'User logged out')
-        user.value = firebaseUser
-        isLoading.value = false
-        authInitialized.value = true
-      })
+        console.log("Auth state changed:", firebaseUser ? "User logged in" : "User logged out");
+        user.value = firebaseUser;
+        isLoading.value = false;
+        authInitialized.value = true;
+        isInitializing = false;
+      });
+
+      console.log('Firebase auth initialized successfully');
     } catch (error) {
-      console.error('Error initializing auth:', error)
-      isLoading.value = false
-      authInitialized.value = true
+      console.error("Error initializing auth:", error);
+      isLoading.value = false;
+      authInitialized.value = true;
+      isInitializing = false;
+      throw error;
     }
-  }
+  };
 
-  const getFirebaseAuth = async () => {
-    await initFirebase()
-    return auth
-  }
+  const getAuth = () => {
+    try {
+      return getFirebaseAuth();
+    } catch (error) {
+      console.error("Error getting Firebase auth:", error);
+      throw error;
+    }
+  };
 
-  const getCurrentUser = () => {
-    return user.value
-  }
+  const getCurrentUser = () => user.value;
 
   const waitForAuth = () => {
-    return new Promise((resolve) => {
-      // If auth is already initialized, resolve immediately
+    return new Promise((resolve, reject) => {
       if (authInitialized.value) {
-        resolve(user.value)
-        return
+        resolve(user.value);
+        return;
       }
 
-      // Otherwise, wait for auth to initialize
+      let attempts = 0;
+      const maxAttempts = 100; // 5 seconds max wait
+
       const checkAuth = () => {
+        attempts++;
+        
         if (authInitialized.value) {
-          resolve(user.value)
+          resolve(user.value);
+        } else if (attempts >= maxAttempts) {
+          reject(new Error('Auth initialization timeout'));
         } else {
-          setTimeout(checkAuth, 50)
+          setTimeout(checkAuth, 50);
         }
-      }
-      
-      checkAuth()
-    })
-  }
+      };
 
-  // Cleanup function
+      checkAuth();
+    });
+  };
+
   const cleanup = () => {
     if (unsubscribe) {
-      unsubscribe()
-      unsubscribe = null
+      unsubscribe();
+      unsubscribe = null;
     }
-  }
+    authInitialized.value = false;
+    isInitializing = false;
+  };
 
   return {
     user,
@@ -94,9 +96,9 @@ export const useFirebase = () => {
     isAuthenticated,
     authInitialized,
     initAuth,
-    getFirebaseAuth,
+    getAuth,
     getCurrentUser,
     waitForAuth,
     cleanup
-  }
-}
+  };
+};

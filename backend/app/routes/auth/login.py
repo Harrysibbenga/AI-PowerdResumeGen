@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from typing import Dict
-from firebase_admin import auth
+from firebase_admin import auth as firebase_auth, exceptions as firebase_exceptions
+
 from app.models.auth import (
-    LoginRequest, LoginWith2FARequest, LoginResponse, MessageResponse,
+    LoginRequestToken, LoginWith2FARequest, LoginResponse, MessageResponse,
     RefreshTokenRequest, RefreshTokenResponse, UserResponse, UserDocument
 )
 from app.helpers.auth_helpers import AuthHelpers
@@ -10,26 +11,31 @@ from app.dependencies.auth_dependencies import get_jwt_user
 
 router = APIRouter()
 
+
 @router.post("/login", response_model=LoginResponse)
-async def login(request: LoginRequest, background_tasks: BackgroundTasks):
-    # Consider adding a background task in the future if needed 
+async def login(request: LoginRequestToken, background_tasks: BackgroundTasks):
     try:
-        try:
-            firebase_user = auth.get_user_by_email(request.email)
-        except auth.UserNotFoundError:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
+        # Step 1: Verify Firebase ID token
+        decoded_token = firebase_auth.verify_id_token(request.id_token)
+        uid = decoded_token["uid"]
+        firebase_user = firebase_auth.get_user(uid)
 
-        lockout_status = await AuthHelpers.check_account_lockout(firebase_user.uid)
+        # Step 2: Check account lockout
+        lockout_status = await AuthHelpers.check_account_lockout(uid)
         if lockout_status["locked"]:
-            raise HTTPException(status_code=status.HTTP_423_LOCKED, detail={
-                "message": "Account temporarily locked",
-                "locked_until": lockout_status["locked_until"].isoformat()
-            })
+            raise HTTPException(
+                status_code=status.HTTP_423_LOCKED,
+                detail={
+                    "message": "Account temporarily locked",
+                    "locked_until": lockout_status["locked_until"].isoformat()
+                }
+            )
 
-        user_doc = await AuthHelpers.get_user_document(firebase_user.uid)
+        # Step 3: Get or create user document
+        user_doc = await AuthHelpers.get_user_document(uid)
         if not user_doc:
             user_document = UserDocument(
-                uid=firebase_user.uid,
+                uid=uid,
                 email=firebase_user.email,
                 display_name=firebase_user.display_name or "",
                 email_verified=firebase_user.email_verified
@@ -37,13 +43,14 @@ async def login(request: LoginRequest, background_tasks: BackgroundTasks):
             await AuthHelpers.create_user_document(user_document)
             user_doc = user_document.dict()
 
+        # Step 4: Handle 2FA
         if user_doc.get("two_factor_enabled", False):
             return LoginResponse(
                 access_token="",
                 refresh_token="",
                 expires_in=0,
                 user=UserResponse(
-                    uid=firebase_user.uid,
+                    uid=uid,
                     email=firebase_user.email,
                     displayName=user_doc.get("display_name", ""),
                     isSubscribed=user_doc.get("subscription", False),
@@ -53,22 +60,21 @@ async def login(request: LoginRequest, background_tasks: BackgroundTasks):
                 requires_2fa=True
             )
 
+        # Step 5: Issue tokens and log activity
         access_token, refresh_token = AuthHelpers.generate_jwt_tokens(
-            firebase_user.uid,
-            firebase_user.email,
-            request.remember_me
+            uid, firebase_user.email, request.remember_me
         )
         payload = AuthHelpers.verify_jwt_token(refresh_token, "refresh")
-        await AuthHelpers.store_refresh_token(firebase_user.uid, refresh_token, payload["jti"])
-        await AuthHelpers.clear_failed_login_attempts(firebase_user.uid)
-        await AuthHelpers.update_last_activity(firebase_user.uid)
+        await AuthHelpers.store_refresh_token(uid, refresh_token, payload["jti"])
+        await AuthHelpers.clear_failed_login_attempts(uid)
+        await AuthHelpers.update_last_activity(uid)
 
         return LoginResponse(
             access_token=access_token,
             refresh_token=refresh_token,
             expires_in=3600,
             user=UserResponse(
-                uid=firebase_user.uid,
+                uid=uid,
                 email=firebase_user.email,
                 displayName=user_doc.get("display_name", ""),
                 isSubscribed=user_doc.get("subscription", False),
@@ -76,49 +82,59 @@ async def login(request: LoginRequest, background_tasks: BackgroundTasks):
                 twoFactorEnabled=user_doc.get("two_factor_enabled", False)
             )
         )
+
+    except firebase_exceptions.FirebaseError as e:
+        raise HTTPException(status_code=401, detail="Invalid or expired Firebase ID token")
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error during login: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error during login")
 
 
 @router.post("/login/2fa", response_model=LoginResponse)
 async def login_with_2fa(request: LoginWith2FARequest):
     try:
-        firebase_user = auth.get_user_by_email(request.email)
-        lockout_status = await AuthHelpers.check_account_lockout(firebase_user.uid)
-        if lockout_status["locked"]:
-            raise HTTPException(status_code=status.HTTP_423_LOCKED, detail={
-                "message": "Account temporarily locked",
-                "locked_until": lockout_status["locked_until"].isoformat()
-            })
+        # Firebase ID token is still required for identity verification
+        decoded_token = firebase_auth.verify_id_token(request.id_token)
+        uid = decoded_token["uid"]
+        firebase_user = firebase_auth.get_user(uid)
 
-        user_doc = await AuthHelpers.get_user_document(firebase_user.uid)
+        # Lockout check
+        lockout_status = await AuthHelpers.check_account_lockout(uid)
+        if lockout_status["locked"]:
+            raise HTTPException(
+                status_code=status.HTTP_423_LOCKED,
+                detail={
+                    "message": "Account temporarily locked",
+                    "locked_until": lockout_status["locked_until"].isoformat()
+                }
+            )
+
+        user_doc = await AuthHelpers.get_user_document(uid)
         if not user_doc or not user_doc.get("two_factor_enabled", False):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="2FA is not enabled")
+            raise HTTPException(status_code=400, detail="2FA is not enabled for this account")
 
         if not request.two_factor_code:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="2FA code is required")
+            raise HTTPException(status_code=400, detail="2FA code is required")
 
         secret = user_doc.get("two_factor_secret")
         if not AuthHelpers.verify_2fa_code(secret, request.two_factor_code):
-            await AuthHelpers.handle_failed_login(firebase_user.uid)
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid 2FA code")
+            await AuthHelpers.handle_failed_login(uid)
+            raise HTTPException(status_code=401, detail="Invalid 2FA code")
 
+        # Issue tokens
         access_token, refresh_token = AuthHelpers.generate_jwt_tokens(
-            firebase_user.uid,
-            firebase_user.email,
-            request.remember_me
+            uid, firebase_user.email, request.remember_me
         )
         payload = AuthHelpers.verify_jwt_token(refresh_token, "refresh")
-        await AuthHelpers.store_refresh_token(firebase_user.uid, refresh_token, payload["jti"])
-        await AuthHelpers.clear_failed_login_attempts(firebase_user.uid)
-        await AuthHelpers.update_last_activity(firebase_user.uid)
+        await AuthHelpers.store_refresh_token(uid, refresh_token, payload["jti"])
+        await AuthHelpers.clear_failed_login_attempts(uid)
+        await AuthHelpers.update_last_activity(uid)
 
         return LoginResponse(
             access_token=access_token,
             refresh_token=refresh_token,
             expires_in=3600,
             user=UserResponse(
-                uid=firebase_user.uid,
+                uid=uid,
                 email=firebase_user.email,
                 displayName=user_doc.get("display_name", ""),
                 isSubscribed=user_doc.get("subscription", False),
@@ -126,8 +142,10 @@ async def login_with_2fa(request: LoginWith2FARequest):
                 twoFactorEnabled=True
             )
         )
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error during 2FA login: {str(e)}")
+    except firebase_exceptions.FirebaseError:
+        raise HTTPException(status_code=401, detail="Invalid or expired Firebase ID token")
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error during 2FA login")
 
 
 @router.post("/refresh", response_model=RefreshTokenResponse)
@@ -138,13 +156,15 @@ async def refresh_access_token(request: RefreshTokenRequest):
         jti = payload["jti"]
 
         if not await AuthHelpers.verify_refresh_token(user_id, jti, request.refresh_token):
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
+            raise HTTPException(status_code=401, detail="Invalid refresh token")
 
         user_doc = await AuthHelpers.get_user_document(user_id)
         if not user_doc:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+            raise HTTPException(status_code=401, detail="User not found")
 
-        access_token, new_refresh_token = AuthHelpers.generate_jwt_tokens(user_id, payload["email"])
+        access_token, new_refresh_token = AuthHelpers.generate_jwt_tokens(
+            user_id, payload["email"]
+        )
         await AuthHelpers.revoke_refresh_token(user_id, jti)
         new_payload = AuthHelpers.verify_jwt_token(new_refresh_token, "refresh")
         await AuthHelpers.store_refresh_token(user_id, new_refresh_token, new_payload["jti"])
@@ -156,7 +176,7 @@ async def refresh_access_token(request: RefreshTokenRequest):
             expires_in=3600
         )
     except Exception:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
 
 
 @router.post("/logout/all", response_model=MessageResponse)
@@ -165,4 +185,4 @@ async def logout_all_devices(user_data: Dict = Depends(get_jwt_user)):
         await AuthHelpers.revoke_all_refresh_tokens(user_data["uid"])
         return MessageResponse(message="Logged out from all devices successfully")
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error during logout: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error during logout from all devices")

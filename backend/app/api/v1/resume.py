@@ -57,7 +57,7 @@ class ExportResponse(BaseModel):
     message: str
 
 # Endpoints
-@router.post("/resumes", response_model=ResumeResponse)
+@router.post("/", response_model=ResumeResponse)
 async def create_resume(
     request: ResumeRequest,
     user: Dict = Depends(get_current_user)
@@ -94,7 +94,7 @@ async def create_resume(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating resume: {str(e)}")
 
-@router.get("/resumes/{resume_id}", response_model=Dict[str, Any])
+@router.get("/{resume_id}", response_model=Dict[str, Any])
 async def get_resume(resume_id: str, user: Dict = Depends(get_current_user)):
     try:
         user_id = user["uid"]
@@ -116,7 +116,7 @@ async def get_resume(resume_id: str, user: Dict = Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving resume: {str(e)}")
 
-@router.get("/resumes", response_model=List[Dict[str, Any]])
+@router.get("/", response_model=List[Dict[str, Any]])
 async def list_resumes(user: Dict = Depends(get_current_user)):
     try:
         user_id = user["uid"]

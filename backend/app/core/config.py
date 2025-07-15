@@ -9,14 +9,14 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     ENVIRONMENT: str = Field(default="development", env="ENVIRONMENT")
     
-    # CORS settings - Fix the parsing issue
+    # Frontend URL for email links and redirects
+    FRONTEND_URL: str = Field(default="http://localhost:4321", env="FRONTEND_URL")
+    
+     # CORS settings - Fix the parsing issue
     CORS_ORIGINS: Union[List[str], str] = Field(
-        default=["http://localhost:3000", "http://localhost:4321"],
+        default=[FRONTEND_URL, "http://localhost:4321"],
         env="CORS_ORIGINS"
     )
-    
-    # Frontend URL for email links and redirects
-    FRONTEND_URL: str = Field(default="http://localhost:3000", env="FRONTEND_URL")
     
     # JWT Settings
     JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "your-super-secret-jwt-key-change-this-in-production")
@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     
     # Authentication settings
     FIREBASE_SERVICE_ACCOUNT_PATH: str = os.getenv("FIREBASE_SERVICE_ACCOUNT_PATH", "")
-    FIREBASE_WEB_API_KEY: Optional[str] = None
+    FIREBASE_WEB_API_KEY: str = os.getenv("FIREBASE_WEB_API_KEY", "")
     
     # Session Management
     SESSION_TIMEOUT_HOURS: int = Field(default=24, env="SESSION_TIMEOUT_HOURS")
