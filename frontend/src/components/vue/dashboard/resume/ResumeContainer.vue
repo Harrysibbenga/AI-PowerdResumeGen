@@ -144,9 +144,8 @@ const handleDeleteResume = async (resume) => {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
-    // Remove from local state
-    resumes.value = resumes.value.filter((resume) => resume.id !== resume.id);
     success("Resume deleted successfully");
+    window.location.reload();
   } catch (err) {
     console.error("Error deleting resume:", err);
     showError("Failed to delete resume. Please try again.");
