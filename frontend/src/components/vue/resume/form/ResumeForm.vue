@@ -51,7 +51,7 @@
       <EducationInput v-model="form.education" />
 
       <!-- Projects -->
-      <ProjectsInput v-if="form.includeProjects" v-model="form.projects" />
+      <ProjectsInput v-if="form.includeProjects" v-model="form" />
 
       <!-- Languages -->
       <Languages v-if="form.includeLanguages" v-model="form" />
@@ -85,7 +85,13 @@ import SubmitButton from "./SubmitButton.vue";
 import { defaultForm } from "@/utils/defaultForm.js";
 import { capitalize } from "@/utils/formatters.js";
 import { useResumeForm } from "@/composables/useResumeForm";
-import { formatFormData, generateAutoSummary } from "@/utils/resumeHelpers";
+import {
+  formatFormData,
+  generateAutoSummary,
+  migrateLanguagesFormat,
+  validateProject,
+  validateLanguage,
+} from "@/utils/resumeHelpers";
 import { buildResumePayload } from "@/utils/buildResumePayload";
 
 // Base state
@@ -113,11 +119,135 @@ const handleIndustryChange = () => {
   }
 };
 
+const validateFormData = () => {
+  const errors = [];
+
+  // Validate projects if included
+  if (form.value.includeProjects && form.value.projects) {
+    form.value.projects.forEach((project, index) => {
+      const validation = validateProject(project);
+      if (!validation.isValid) {
+        errors.push(`Project ${index + 1}: ${validation.errors.join(", ")}`);
+      }
+    });
+  }
+
+  // Validate languages if included
+  if (form.value.includeLanguages && form.value.languages) {
+    form.value.languages.forEach((language, index) => {
+      const validation = validateLanguage(language);
+      if (!validation.isValid) {
+        errors.push(`Language ${index + 1}: ${validation.errors.join(", ")}`);
+      }
+    });
+  }
+
+  return errors;
+};
+
+const hasExistingData = (formData) => {
+  // Check if any key personal fields have been filled with non-default values
+  const hasPersonalInfo =
+    formData.fullName &&
+    formData.fullName !== "John Doe" &&
+    formData.email &&
+    formData.email !== "john.doe@example.com";
+
+  // Check if work experience has been customized
+  const hasCustomWork =
+    formData.workExperience &&
+    formData.workExperience.length > 0 &&
+    formData.workExperience[0].company !== "CyberSafe Ltd";
+
+  // Check if education has been customized
+  const hasCustomEducation =
+    formData.education &&
+    formData.education.length > 0 &&
+    formData.education[0].school !== "Tech University";
+
+  return hasPersonalInfo || hasCustomWork || hasCustomEducation;
+};
+
+// Create empty form structure
+const createEmptyForm = () => {
+  return {
+    // Personal Information
+    fullName: "",
+    email: "",
+    phone: "",
+    linkedin: "",
+    location: "",
+
+    // Resume Details
+    title: "",
+    targetJobTitle: "",
+    targetJobRole: "",
+    targetCompany: "",
+    industry: "",
+
+    // Professional Summary
+    summary: "",
+
+    // Skills
+    skills: [],
+
+    // Work Experience
+    workExperience: [
+      {
+        title: "",
+        company: "",
+        location: "",
+        startDate: "",
+        endDate: "",
+        description: "",
+        highlights: [""],
+      },
+    ],
+
+    // Education
+    education: [
+      {
+        degree: "",
+        school: "",
+        location: "",
+        graduationDate: "",
+        description: "",
+        gpa: "",
+      },
+    ],
+
+    // Section toggles
+    includeProjects: false,
+    includeCertifications: false,
+    includeLanguages: false,
+
+    // Projects
+    projects: [],
+
+    // Certifications
+    certifications: [],
+
+    // Languages
+    languages: [],
+
+    // AI Settings
+    useAI: true,
+    aiTone: "professional",
+    aiLength: "standard",
+  };
+};
+
 const handleSubmit = async () => {
   error.value = "";
   loading.value = true;
 
   try {
+    // Validate form data before processing
+    const validationErrors = validateFormData();
+    if (validationErrors.length > 0) {
+      throw new Error(`Please fix the following errors:\n${validationErrors.join("\n")}`);
+    }
+
     formatFormData(form.value);
 
     const user = await waitForAuth();
@@ -143,8 +273,90 @@ const handleSubmit = async () => {
   }
 };
 
+// Migration and initialization logic
+const migrateFormData = (formData) => {
+  // Migrate languages from old string format to new object format
+  if (formData.languages && Array.isArray(formData.languages)) {
+    formData.languages = migrateLanguagesFormat(formData.languages);
+  }
+
+  // Ensure projects have the correct structure
+  if (formData.projects && Array.isArray(formData.projects)) {
+    formData.projects = formData.projects.map((project) => {
+      // Ensure all required fields exist
+      return {
+        title: project.title || "",
+        description: project.description || "",
+        technologies: project.technologies || [],
+        url: project.url || "",
+        startDate: project.startDate || "",
+        endDate: project.endDate || "",
+        highlights: project.highlights || [""],
+        ...project, // Keep any additional fields
+      };
+    });
+  }
+
+  return formData;
+};
+
 onMounted(() => {
-  form.value = { ...form.value, ...JSON.parse(JSON.stringify(defaultForm)) };
+  // Check if there's existing data from localStorage, props, or API
+  let existingData = null;
+
+  // Try to load from localStorage
+  try {
+    const saved = localStorage.getItem("resumeFormData");
+    if (saved) {
+      existingData = JSON.parse(saved);
+    }
+  } catch (e) {
+    console.warn("Could not load saved form data:", e);
+  }
+
+  // You can also check for data from props or route params here
+  // existingData = props.initialData || existingData;
+
+  let initialForm;
+
+  if (existingData && hasExistingData(existingData)) {
+    // Use existing data and migrate it
+    console.log("Loading existing form data");
+    initialForm = migrateFormData(existingData);
+  } else {
+    // Determine whether to use test data or empty form
+    const useTestData =
+      process.env.NODE_ENV === "development" ||
+      new URLSearchParams(window.location.search).has("testdata");
+
+    if (useTestData) {
+      console.log("Using test data for development");
+      initialForm = migrateFormData(JSON.parse(JSON.stringify(defaultForm)));
+    } else {
+      console.log("Creating new empty form");
+      initialForm = createEmptyForm();
+    }
+  }
+
+  // Set the form data
+  form.value = initialForm;
+
+  console.log("Form initialized:", {
+    hasData: hasExistingData(form.value),
+    form: form.value,
+  });
+});
+
+// Optional: Add a method to handle loading saved data
+const loadSavedData = (savedData) => {
+  const migratedData = migrateFormData(savedData);
+  form.value = { ...form.value, ...migratedData };
+};
+
+// Export for potential use by parent components
+defineExpose({
+  loadSavedData,
+  validateFormData,
 });
 </script>
 

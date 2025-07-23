@@ -30,7 +30,7 @@ async def create_resume(
         user_id = user["uid"]
 
         # Validate user input
-        if not request.profile.experience and not request.profile.education:
+        if not request.profile.workExperience and not request.profile.education:
             raise HTTPException(
                 status_code=400, 
                 detail="At least one work experience or education entry is required"
@@ -40,19 +40,19 @@ async def create_resume(
         if settings.USE_DEEPSEEK and settings.DEEPSEEK_API_KEY:
             resume_content = await generate_resume_with_deepseek(
                 profile_data=request.profile.dict(), 
-                tone=request.tone.value,
-                target_job_title=request.target_job_title,
-                target_job_role=request.target_job_role,
-                focus_keywords=request.focus_keywords,
+                tone=request.aiTone.value,  
+                target_job_title=request.targetJobTitle,  
+                target_job_role=request.targetJobRole,   
+                focus_keywords=request.focusKeywords,    
                 template_id=request.template_id.value
             )
         else:
             resume_content = await generate_resume_with_gpt(
                 profile_data=request.profile.dict(), 
-                tone=request.tone.value,
-                target_job_title=request.target_job_title,
-                target_job_role=request.target_job_role,
-                focus_keywords=request.focus_keywords,
+                tone=request.aiTone.value,  
+                target_job_title=request.targetJobTitle,  
+                target_job_role=request.targetJobRole,   
+                focus_keywords=request.focusKeywords,    
                 template_id=request.template_id.value
             )
 
@@ -67,17 +67,18 @@ async def create_resume(
             "id": resume_id,
             "user_id": user_id,
             "title": request.title,
-            "target_job_title": request.target_job_title,
-            "target_job_role": request.target_job_role,
-            "target_company": request.target_company,
+            "target_job_title": request.targetJobTitle,      
+            "target_job_role": request.targetJobRole,        
+            "target_company": request.targetCompany,         
             "industry": request.profile.industry,
             "template_id": request.template_id.value,
-            "tone": request.tone.value,
-            "length": request.length.value,
-            "focus_keywords": request.focus_keywords,
-            "include_projects": request.include_projects,
-            "include_certifications": request.include_certifications,
-            "include_languages": request.include_languages,
+            "tone": request.aiTone.value,                    
+            "length": request.aiLength.value,                
+            "focus_keywords": request.focusKeywords,         
+            "use_ai": request.useAI,                         
+            "include_projects": request.includeProjects,     
+            "include_certifications": request.includeCertifications,  
+            "include_languages": request.includeLanguages,   
             "profile_data": request.profile.dict(),
             "ai_content": resume_content,
             "summary_excerpt": summary_excerpt,
@@ -98,8 +99,8 @@ async def create_resume(
         return ResumeResponse(
             id=resume_id,
             title=request.title,
-            target_job_title=request.target_job_title,
-            target_job_role=request.target_job_role,
+            target_job_title=request.targetJobTitle, 
+            target_job_role=request.targetJobRole,  
             sections=resume_content,
             message="Resume generated successfully!",
             created_at=resume_data["created_at"],
@@ -155,8 +156,8 @@ async def duplicate_resume(
         return ResumeResponse(
             id=new_resume_id,
             title=new_resume_data["title"],
-            target_job_title=new_resume_data["target_job_title"],
-            target_job_role=new_resume_data.get("target_job_role"),
+            target_job_title=new_resume_data.get("target_job_title", new_resume_data.get("targetJobTitle")),  # Handle both field names
+            target_job_role=new_resume_data.get("target_job_role", new_resume_data.get("targetJobRole")),    # Handle both field names
             sections=new_resume_data["ai_content"],
             message="Resume duplicated successfully!",
             created_at=new_resume_data["created_at"],
@@ -192,23 +193,29 @@ async def regenerate_resume_content(
         if resume_data["user_id"] != user_id:
             raise HTTPException(status_code=403, detail="Unauthorized access")
 
+        # Extract data with fallbacks for field name changes
+        target_job_title = resume_data.get("target_job_title") or resume_data.get("targetJobTitle")
+        target_job_role = resume_data.get("target_job_role") or resume_data.get("targetJobRole")
+        tone = resume_data.get("tone") or resume_data.get("aiTone", "professional")
+        focus_keywords = resume_data.get("focus_keywords") or resume_data.get("focusKeywords")
+
         # Regenerate AI content
         if settings.USE_DEEPSEEK and settings.DEEPSEEK_API_KEY:
             new_content = await generate_resume_with_deepseek(
                 profile_data=resume_data["profile_data"], 
-                tone=resume_data["tone"],
-                target_job_title=resume_data["target_job_title"],
-                target_job_role=resume_data.get("target_job_role"),
-                focus_keywords=resume_data.get("focus_keywords"),
+                tone=tone,
+                target_job_title=target_job_title,
+                target_job_role=target_job_role,
+                focus_keywords=focus_keywords,
                 template_id=resume_data["template_id"]
             )
         else:
             new_content = await generate_resume_with_gpt(
                 profile_data=resume_data["profile_data"], 
-                tone=resume_data["tone"],
-                target_job_title=resume_data["target_job_title"],
-                target_job_role=resume_data.get("target_job_role"),
-                focus_keywords=resume_data.get("focus_keywords"),
+                tone=tone,
+                target_job_title=target_job_title,
+                target_job_role=target_job_role,
+                focus_keywords=focus_keywords,
                 template_id=resume_data["template_id"]
             )
 
@@ -230,8 +237,8 @@ async def regenerate_resume_content(
         return ResumeResponse(
             id=resume_id,
             title=updated_data["title"],
-            target_job_title=updated_data["target_job_title"],
-            target_job_role=updated_data.get("target_job_role"),
+            target_job_title=target_job_title,  # Use extracted value
+            target_job_role=target_job_role,    # Use extracted value
             sections=updated_data["ai_content"],
             message="Resume content regenerated successfully!",
             created_at=updated_data["created_at"],
@@ -245,3 +252,31 @@ async def regenerate_resume_content(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error regenerating resume: {str(e)}")
+
+# Optional: Helper function to normalize field names across old/new data
+def normalize_resume_data(resume_data):
+    """Helper to handle field name transitions in stored data"""
+    normalized = resume_data.copy()
+    
+    # Handle field name mappings
+    field_mappings = {
+        "targetJobTitle": "target_job_title",
+        "targetJobRole": "target_job_role", 
+        "targetCompany": "target_company",
+        "aiTone": "tone",
+        "aiLength": "length",
+        "focusKeywords": "focus_keywords",
+        "includeProjects": "include_projects",
+        "includeCertifications": "include_certifications",
+        "includeLanguages": "include_languages",
+        "useAI": "use_ai"
+    }
+    
+    # Map new field names to old ones if they exist
+    for new_field, old_field in field_mappings.items():
+        if new_field in normalized and old_field not in normalized:
+            normalized[old_field] = normalized[new_field]
+        elif old_field in normalized and new_field not in normalized:
+            normalized[new_field] = normalized[old_field]
+    
+    return normalized

@@ -6,23 +6,26 @@ from .profile import UserProfile
 class ResumeRequest(BaseModel):
     # Resume metadata
     title: str
-    target_job_title: str
-    target_job_role: Optional[str] = None
-    target_company: Optional[str] = None
+    targetJobTitle: str  
+    targetJobRole: Optional[str] = None  
+    targetCompany: Optional[str] = None  
     
     # User profile data
     profile: UserProfile
     
     # AI generation settings
-    tone: ResumeTone = ResumeTone.PROFESSIONAL
-    length: ResumeLength = ResumeLength.STANDARD
+    aiTone: ResumeTone = ResumeTone.PROFESSIONAL  
+    aiLength: ResumeLength = ResumeLength.STANDARD  
     template_id: ResumeTemplate = ResumeTemplate.MODERN
     
+    # Section inclusion flags
+    includeProjects: bool = True  
+    includeCertifications: bool = True  
+    includeLanguages: bool = False  
+    
     # Additional options
-    include_projects: bool = True
-    include_certifications: bool = True
-    include_languages: bool = False
-    focus_keywords: Optional[str] = None
+    focusKeywords: Optional[str] = None  
+    useAI: bool = True 
     
     # Custom sections
     custom_sections: Optional[Dict[str, Any]] = None
@@ -33,7 +36,7 @@ class ResumeRequest(BaseModel):
             raise ValueError('Resume title cannot be empty')
         return v.strip()
 
-    @validator('target_job_title')
+    @validator('targetJobTitle')
     def validate_target_job_title(cls, v):
         if not v.strip():
             raise ValueError('Target job title cannot be empty')
@@ -41,11 +44,11 @@ class ResumeRequest(BaseModel):
 
 class ResumeUpdateRequest(BaseModel):
     title: Optional[str] = None
-    target_job_title: Optional[str] = None
-    target_job_role: Optional[str] = None
-    target_company: Optional[str] = None
-    tone: Optional[ResumeTone] = None
-    length: Optional[ResumeLength] = None
+    targetJobTitle: Optional[str] = None
+    targetJobRole: Optional[str] = None
+    targetCompany: Optional[str] = None
+    aiTone: Optional[ResumeTone] = None
+    aiLength: Optional[ResumeLength] = None
     template_id: Optional[ResumeTemplate] = None
-    focus_keywords: Optional[str] = None
+    focusKeywords: Optional[str] = None
     profile: Optional[UserProfile] = None

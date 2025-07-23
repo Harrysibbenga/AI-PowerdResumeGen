@@ -55,7 +55,7 @@ export const useResumeForm = () => {
     focusKeywords: "",
     includeProjects: true,
     includeCertifications: true,
-    includeLanguages: false,
+    includeLanguages: true,
   });
 
   return { form };
