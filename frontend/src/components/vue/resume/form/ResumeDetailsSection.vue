@@ -8,7 +8,7 @@
         </label>
         <input
           id="resumeTitle"
-          v-model="modelValue.title"
+          v-model="title"
           type="text"
           placeholder="e.g., Senior Software Engineer Resume"
           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
@@ -22,7 +22,7 @@
         </label>
         <input
           id="targetJobTitle"
-          v-model="modelValue.targetJobTitle"
+          v-model="targetJobTitle"
           type="text"
           placeholder="e.g., Senior Software Engineer"
           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
@@ -36,7 +36,7 @@
         </label>
         <select
           id="targetJobRole"
-          v-model="modelValue.targetJobRole"
+          v-model="targetJobRole"
           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
         >
           <option value="">Select level (optional)</option>
@@ -60,7 +60,7 @@
         </label>
         <input
           id="targetCompany"
-          v-model="modelValue.targetCompany"
+          v-model="targetCompany"
           type="text"
           placeholder="e.g., Google, Microsoft, or leave blank for general use"
           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
@@ -74,10 +74,74 @@
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue'
+
+const props = defineProps({
   modelValue: {
     type: Object,
     required: true,
   },
 });
+
+const emit = defineEmits(['update:modelValue', 'change']);
+
+// Safe access to model values with defaults
+const safeModelValue = computed(() => props.modelValue || {
+  title: '',
+  targetJobTitle: '',
+  targetJobRole: '',
+  targetCompany: ''
+});
+
+// Create reactive computed properties for each field
+const title = computed({
+  get: () => safeModelValue.value.title || '',
+  set: (value) => {
+    console.log('ResumeDetailsSection: title changed to:', value);
+    if (props.modelValue) {
+      const updated = { ...props.modelValue, title: value };
+      emit('update:modelValue', updated);
+      emit('change');
+    }
+  }
+});
+
+const targetJobTitle = computed({
+  get: () => safeModelValue.value.targetJobTitle || '',
+  set: (value) => {
+    console.log('ResumeDetailsSection: targetJobTitle changed to:', value);
+    if (props.modelValue) {
+      const updated = { ...props.modelValue, targetJobTitle: value };
+      emit('update:modelValue', updated);
+      emit('change');
+    }
+  }
+});
+
+const targetJobRole = computed({
+  get: () => safeModelValue.value.targetJobRole || '',
+  set: (value) => {
+    console.log('ResumeDetailsSection: targetJobRole changed to:', value);
+    if (props.modelValue) {
+      const updated = { ...props.modelValue, targetJobRole: value };
+      emit('update:modelValue', updated);
+      emit('change');
+    }
+  }
+});
+
+const targetCompany = computed({
+  get: () => safeModelValue.value.targetCompany || '',
+  set: (value) => {
+    console.log('ResumeDetailsSection: targetCompany changed to:', value);
+    if (props.modelValue) {
+      const updated = { ...props.modelValue, targetCompany: value };
+      emit('update:modelValue', updated);
+      emit('change');
+    }
+  }
+});
+
+// Debug logging
+console.log('ResumeDetailsSection mounted with modelValue:', props.modelValue);
 </script>

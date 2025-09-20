@@ -3,16 +3,16 @@ from datetime import datetime
 from typing import Optional
 
 class SessionResponse(BaseModel):
-    sessionId: str
-    expiresAt: Optional[datetime] = None
-    isValid: bool
+    session_id: str
+    expires_at: Optional[datetime] = None
+    is_valid: bool
 
 class SessionStatusResponse(BaseModel):
-    sessionId: str
-    expiresAt: Optional[datetime] = None
-    isValid: bool
-    timeRemaining: Optional[int] = None
+    session_id: str
+    expires_at: Optional[datetime] = None
+    is_valid: bool
+    time_remaining: Optional[int] = None
 
 class ExtendSessionResponse(BaseModel):
     message: str
-    expiresAt: datetime
+    expires_at: datetime

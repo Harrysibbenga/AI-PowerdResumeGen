@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Resume Form Test</title>
+</head>
+<body>
+    <h1>Resume Form Debug Test</h1>
+    <div id="app">
+        <div v-if="resumeData">
+            <h2>Resume Data Loaded:</h2>
+            <p>Include Projects: {{ resumeData.includeProjects }}</p>
+            <p>Include Certifications: {{ resumeData.includeCertifications }}</p>
+            <p>Include Languages: {{ resumeData.includeLanguages }}</p>
+        </div>
+        <div v-else>
+            <p>Resume data not loaded</p>
+        </div>
+    </div>
+
+    <script type="module">
+        // Simple test to verify the logic
+        const createEmptyFormStructure = () => ({
+            includeProjects: false,
+            includeCertifications: false,
+            includeLanguages: false,
+            industry: '',
+            skills: [],
+            workExperience: [],
+            education: [],
+            certifications: [],
+            projects: [],
+            languages: []
+        });
+
+        const safeResumeData = {
+            includeProjects: true,
+            includeCertifications: true,
+            includeLanguages: true,
+        };
+
+        console.log('Test data:', safeResumeData);
+        console.log('Safe access works:', safeResumeData.includeCertifications);
+    </script>
+</body>
+</html>

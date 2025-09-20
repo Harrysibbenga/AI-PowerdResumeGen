@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     ENVIRONMENT: str = Field(default="development", env="ENVIRONMENT")
     
+    DEBUG: bool = os.getenv('DEBUG')
+    
     # Frontend URL for email links and redirects
     FRONTEND_URL: str = Field(default="http://localhost:4321", env="FRONTEND_URL")
     

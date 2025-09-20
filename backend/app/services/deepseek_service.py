@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 async def generate_resume_with_deepseek(
     profile_data: Dict[str, Any], 
     tone: str = "professional",
+    industry: str = "general",
     target_job_title: Optional[str] = None,
     target_job_role: Optional[str] = None,
     focus_keywords: Optional[str] = None,
@@ -32,7 +33,7 @@ async def generate_resume_with_deepseek(
     try:
         # Enhanced system prompt with modern AI prompting techniques
         system_prompt = _create_enhanced_system_prompt(
-            industry=profile_data.get("industry", "general"),
+            industry=industry,
             tone=tone,
             target_job_title=target_job_title,
             target_job_role=target_job_role,
@@ -110,7 +111,8 @@ async def generate_resume_with_deepseek(
 def _prepare_user_content(
     profile_data: Dict[str, Any], 
     target_job_title: Optional[str] = None,
-    focus_keywords: Optional[str] = None
+    focus_keywords: Optional[str] = None,
+    industry: Optional[str] = 'general'
 ) -> str:
     """Prepare structured user content for better AI understanding"""
     
@@ -118,12 +120,12 @@ def _prepare_user_content(
     user_context = {
         "candidate_profile": {
             "personal_info": {
-                "name": profile_data.get("fullName", ""),
+                "name": profile_data.get("full_name", ""),
                 "email": profile_data.get("email", ""),
                 "location": profile_data.get("location", ""),
-                "industry": profile_data.get("industry", "")
+                "industry": industry
             },
-            "work_experience": profile_data.get("workExperience", []),
+            "work_experience": profile_data.get("work_experience", []),
             "education": profile_data.get("education", []),
             "skills": profile_data.get("skills", []),
             "projects": profile_data.get("projects", []),

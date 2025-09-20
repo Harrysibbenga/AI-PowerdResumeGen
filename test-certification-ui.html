@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certification UI Test</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .cert-item { background: #f5f5f5; padding: 16px; margin: 8px 0; border-radius: 8px; }
+        .form-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; margin: 12px 0; }
+        .input { padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; }
+        .button { padding: 8px 16px; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .button:hover { background: #1d4ed8; }
+        .suggestion { display: inline-block; padding: 4px 12px; margin: 4px; background: #dbeafe; color: #1e40af; border-radius: 20px; cursor: pointer; border: 1px solid #bfdbfe; }
+        .suggestion:hover { background: #bfdbfe; }
+    </style>
+</head>
+<body>
+    <h1>Enhanced Certification UI - Test</h1>
+    
+    <div id="certification-demo">
+        <h3>Suggested Certifications (Cybersecurity):</h3>
+        <div>
+            <span class="suggestion" onclick="addSuggestion('CompTIA Security+')">+ CompTIA Security+</span>
+            <span class="suggestion" onclick="addSuggestion('CISSP')">+ CISSP</span>
+            <span class="suggestion" onclick="addSuggestion('CEH')">+ CEH</span>
+            <span class="suggestion" onclick="addSuggestion('AWS Security Specialty')">+ AWS Security Specialty</span>
+        </div>
+        
+        <h3>Your Certifications:</h3>
+        <div id="certifications-list"></div>
+        
+        <button class="button" onclick="addCertification()" style="margin-top: 12px;">+ Add Certification</button>
+    </div>
+
+    <script>
+        let certifications = [
+            { name: '', issuer: '', date: '', expiryDate: '', credentialId: '' }
+        ];
+
+        function renderCertifications() {
+            const container = document.getElementById('certifications-list');
+            container.innerHTML = '';
+            
+            certifications.forEach((cert, index) => {
+                const certDiv = document.createElement('div');
+                certDiv.className = 'cert-item';
+                
+                certDiv.innerHTML = `
+                    <div class="form-grid">
+                        <div>
+                            <label><strong>Certification Name *</strong></label>
+                            <input type="text" class="input" placeholder="e.g., AWS Certified Solutions Architect" 
+                                   value="${cert.name}" onchange="updateCert(${index}, 'name', this.value)" />
+                        </div>
+                        <div>
+                            <label><strong>Issuing Organization</strong></label>
+                            <input type="text" class="input" placeholder="e.g., Amazon Web Services" 
+                                   value="${cert.issuer}" onchange="updateCert(${index}, 'issuer', this.value)" />
+                        </div>
+                        <div>
+                            <button onclick="removeCertification(${index})" style="background: #dc2626; padding: 8px 12px; color: white; border: none; border-radius: 4px; cursor: pointer;">Remove</button>
+                        </div>
+                    </div>
+                    <div class="form-grid" style="margin-top: 8px;">
+                        <div>
+                            <label><strong>Date Obtained</strong></label>
+                            <input type="month" class="input" 
+                                   value="${cert.date}" onchange="updateCert(${index}, 'date', this.value)" />
+                        </div>
+                        <div>
+                            <label><strong>Expiry Date</strong></label>
+                            <input type="month" class="input" 
+                                   value="${cert.expiryDate}" onchange="updateCert(${index}, 'expiryDate', this.value)" />
+                        </div>
+                        <div>
+                            <label><strong>Credential ID</strong></label>
+                            <input type="text" class="input" placeholder="Optional verification ID/URL" 
+                                   value="${cert.credentialId}" onchange="updateCert(${index}, 'credentialId', this.value)" />
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(certDiv);
+            });
+        }
+
+        function addCertification() {
+            certifications.push({ name: '', issuer: '', date: '', expiryDate: '', credentialId: '' });
+            renderCertifications();
+        }
+
+        function addSuggestion(name) {
+            // Check if already exists
+            const exists = certifications.some(cert => cert.name.toLowerCase() === name.toLowerCase());
+            if (!exists) {
+                // Replace first empty cert or add new one
+                const firstEmpty = certifications.findIndex(cert => cert.name === '');
+                if (firstEmpty !== -1) {
+                    certifications[firstEmpty].name = name;
+                } else {
+                    certifications.push({ name: name, issuer: '', date: '', expiryDate: '', credentialId: '' });
+                }
+                renderCertifications();
+            }
+        }
+
+        function removeCertification(index) {
+            certifications.splice(index, 1);
+            if (certifications.length === 0) {
+                certifications.push({ name: '', issuer: '', date: '', expiryDate: '', credentialId: '' });
+            }
+            renderCertifications();
+        }
+
+        function updateCert(index, field, value) {
+            certifications[index][field] = value;
+            console.log('Updated certification:', certifications[index]);
+        }
+
+        // Initial render
+        renderCertifications();
+    </script>
+</body>
+</html>

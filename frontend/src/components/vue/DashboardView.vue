@@ -42,8 +42,14 @@ import { useToast } from "@/composables/useToast";
 const { initAuth, user, isAuthenticated, authInitialized } = useFirebase();
 const { success, error: showError, info } = useToast();
 
+// Check if we're in browser environment
+const isBrowser = typeof window !== "undefined";
+
 // Initialize auth when component mounts
 onMounted(async () => {
+  // Only initialize in browser
+  if (!isBrowser) return;
+
   try {
     await initAuth();
 
@@ -61,6 +67,9 @@ onMounted(async () => {
 watch(
   [authInitialized, isAuthenticated],
   ([initialized, authenticated]) => {
+    // Only handle redirects in browser
+    if (!isBrowser) return;
+
     if (initialized && !authenticated) {
       info("Please log in to access the dashboard");
       setTimeout(() => {

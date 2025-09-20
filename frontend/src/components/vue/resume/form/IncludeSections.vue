@@ -6,6 +6,7 @@
         <input
           type="checkbox"
           v-model="modelValue.includeProjects"
+          @change="handleChange"
           class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
         />
         <span class="ml-2 text-sm text-gray-700">Include Projects</span>
@@ -14,6 +15,7 @@
         <input
           type="checkbox"
           v-model="modelValue.includeCertifications"
+          @change="handleChange"
           class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
         />
         <span class="ml-2 text-sm text-gray-700">Include Certifications</span>
@@ -22,6 +24,7 @@
         <input
           type="checkbox"
           v-model="modelValue.includeLanguages"
+          @change="handleChange"
           class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
         />
         <span class="ml-2 text-sm text-gray-700">Include Languages</span>
@@ -31,10 +34,16 @@
 </template>
 
 <script setup>
+const emit = defineEmits(['change'])
+
 defineProps({
   modelValue: {
     type: Object,
     required: true,
   },
 });
+
+const handleChange = () => {
+  emit('change');
+};
 </script>

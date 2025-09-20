@@ -1,33 +1,60 @@
 <template>
-  <div class="bg-gray-50 p-6 rounded-md">
-    <h2 class="text-xl font-semibold mb-4">Languages</h2>
-
-    <!-- Display existing languages with edit capability -->
-    <div v-if="form.languages && form.languages.length > 0" class="space-y-3 mb-4">
-      <div class="text-sm text-gray-600 mb-2">Your languages:</div>
-      <div
-        v-for="(languageEntry, index) in form.languages"
-        :key="index"
-        class="flex items-center justify-between bg-white p-3 rounded-md border"
+  <div class="bg-white p-6 rounded-lg border border-gray-200">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-semibold text-gray-900">Languages</h3>
+      <button
+        v-if="!showLanguageForm"
+        type="button"
+        @click="startAddingLanguage"
+        class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
       >
-        <div class="flex items-center space-x-3">
-          <span class="font-medium">{{ languageEntry.language }}</span>
-          <span class="text-sm px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
-            {{ languageEntry.proficiency }}
-          </span>
-        </div>
-        <button
-          type="button"
-          @click="removeLanguage(index)"
-          class="text-red-600 hover:text-red-800 text-sm"
+        + Add Language
+      </button>
+    </div>
+
+    <!-- Display existing languages -->
+    <div v-if="languages.length > 0" class="space-y-4 mb-6">
+      <div class="text-sm font-medium text-gray-700">Your Languages:</div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div
+          v-for="(languageEntry, index) in languages"
+          :key="index"
+          class="bg-gray-50 p-4 border border-gray-200 rounded-lg"
         >
-          Remove
-        </button>
+          <div class="flex justify-between items-start mb-2">
+            <h4 class="font-medium text-gray-900">
+              {{ languageEntry.language || languageEntry.name || `Language #${index + 1}` }}
+            </h4>
+            <button
+              type="button"
+              @click="removeLanguage(index)"
+              class="text-red-600 hover:text-red-800 text-sm font-medium"
+            >
+              Remove
+            </button>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              {{ languageEntry.proficiency || 'Not specified' }}
+            </span>
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- Language addition interface -->
-    <div v-if="showLanguageForm" class="bg-white p-4 rounded-md border space-y-4">
+    <div v-if="showLanguageForm" class="bg-white p-6 border border-gray-200 rounded-lg shadow-sm space-y-6">
+      <div class="flex justify-between items-center">
+        <h3 class="text-lg font-medium text-gray-900">Add New Language</h3>
+        <button
+          type="button"
+          @click="cancelAddLanguage"
+          class="text-gray-500 hover:text-gray-700"
+        >
+          ✕
+        </button>
+      </div>
+
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <!-- Language Selection -->
         <div>
@@ -101,7 +128,14 @@
       </div>
 
       <!-- Action buttons -->
-      <div class="flex space-x-2">
+      <div class="flex justify-end space-x-3 pt-4 border-t">
+        <button
+          type="button"
+          @click="cancelAddLanguage"
+          class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+        >
+          Cancel
+        </button>
         <button
           type="button"
           @click="addLanguage"
@@ -110,40 +144,52 @@
         >
           Add Language
         </button>
-        <button
-          type="button"
-          @click="cancelAddLanguage"
-          class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
-        >
-          Cancel
-        </button>
       </div>
     </div>
 
-    <!-- Add Language button -->
-    <button
-      v-if="!showLanguageForm"
-      type="button"
-      @click="startAddingLanguage"
-      class="px-4 py-2 text-blue-600 hover:text-blue-800 border border-blue-300 rounded-md hover:bg-blue-50"
-    >
-      + Add Language
-    </button>
+    <!-- Empty State -->
+    <div v-if="languages.length === 0 && !showLanguageForm" class="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+      <div class="text-4xl mb-2">🌍</div>
+      <p class="text-gray-600 font-medium">No languages added yet</p>
+      <p class="text-gray-500 text-sm mt-1">Click "Add Language" to showcase your language skills</p>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed } from "vue";
+import { ref, reactive, computed, onMounted } from "vue";
 import defaultLanguagesData from "@/data/defaultLanguages.json";
 
-defineProps({
+const props = defineProps({
   modelValue: {
-    type: Object,
+    type: Array,
     required: true,
   },
 });
 
-const form = defineModel("modelValue");
+const emit = defineEmits(['update:modelValue', 'change']);
+
+// Debug logging
+onMounted(() => {
+  console.log('LanguagesInput mounted with modelValue:', props.modelValue);
+  console.log('Languages array type:', typeof props.modelValue, 'isArray:', Array.isArray(props.modelValue));
+  if (Array.isArray(props.modelValue)) {
+    console.log('Languages count:', props.modelValue.length);
+    props.modelValue.forEach((language, index) => {
+      console.log(`Language ${index}:`, language.language || language.name || 'Unnamed');
+    });
+  }
+});
+
+// Safe access to languages array
+const languages = computed(() => {
+  console.log('LanguagesInput - modelValue:', props.modelValue);
+  if (!Array.isArray(props.modelValue)) {
+    console.warn('LanguagesInput - modelValue is not an array:', typeof props.modelValue, props.modelValue);
+    return [];
+  }
+  return props.modelValue;
+});
 
 // Extract proficiency levels from the JSON file
 const proficiencyLevels = computed(() => {
@@ -186,10 +232,17 @@ const newLanguage = reactive({
   proficiency: "",
 });
 
+// Update languages array
+const updateLanguages = (newLanguages) => {
+  console.log('LanguagesInput - updating languages:', newLanguages);
+  emit('update:modelValue', newLanguages);
+  emit('change');
+};
+
 // Initialize languages array if it doesn't exist
 const initializeLanguages = () => {
-  if (!form.value.languages) {
-    form.value.languages = [];
+  if (!Array.isArray(languages.value)) {
+    updateLanguages([]);
   }
 };
 
@@ -215,8 +268,8 @@ const onLanguageSelect = () => {
 const addLanguage = () => {
   if (newLanguage.language && newLanguage.proficiency) {
     // Check if language already exists
-    const exists = form.value.languages.some(
-      (lang) => lang.language.toLowerCase() === newLanguage.language.toLowerCase()
+    const exists = languages.value.some(
+      (lang) => (lang.language || lang.name || '').toLowerCase() === newLanguage.language.toLowerCase()
     );
 
     if (exists) {
@@ -224,11 +277,13 @@ const addLanguage = () => {
       return;
     }
 
-    form.value.languages.push({
+    const updatedLanguages = [...languages.value, {
       language: newLanguage.language,
+      name: newLanguage.language, // Support both formats
       proficiency: newLanguage.proficiency,
-    });
+    }];
 
+    updateLanguages(updatedLanguages);
     resetNewLanguage();
     showLanguageForm.value = false;
   }
@@ -250,6 +305,8 @@ const resetNewLanguage = () => {
 
 // Remove a language
 const removeLanguage = (index) => {
-  form.value.languages.splice(index, 1);
+  const updatedLanguages = [...languages.value];
+  updatedLanguages.splice(index, 1);
+  updateLanguages(updatedLanguages);
 };
 </script>

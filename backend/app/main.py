@@ -1,7 +1,10 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import logging
+import time
+import traceback
+import os
 
 # Import your existing routers
 from app.api.v1 import payments
@@ -9,11 +12,12 @@ from app.routes import auth, resume
 
 from app.core.config import settings
 
-# Configure logging
+# Configure logging (kept as original)
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.INFO if not settings.DEBUG else logging.DEBUG,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
+    
 logger = logging.getLogger(__name__)
 
 @asynccontextmanager
@@ -37,7 +41,7 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Configure CORS
+# Configure CORS (original)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
@@ -64,7 +68,7 @@ app.include_router(
     tags=["payments"]
 )
 
-# Health check endpoint with enhanced information
+
 @app.get("/", tags=["health"])
 def health_check():
     """Enhanced health check with service status"""
@@ -81,7 +85,6 @@ def health_check():
         }
     }
 
-# Additional health check for authentication service
 @app.get("/api/v1/auth/health", tags=["health"])
 def auth_health_check():
     """Specific health check for authentication service"""
@@ -99,10 +102,11 @@ def auth_health_check():
 
 if __name__ == "__main__":
     import uvicorn
+    os.environ.setdefault("PYTHONASYNCIODEBUG", "1")  # helps show async stack info
     uvicorn.run(
         "app.main:app", 
         host="0.0.0.0", 
         port=8000, 
         reload=True,
-        log_level="info"
+        log_level="info" if not settings.DEBUG else 'debug'
     )

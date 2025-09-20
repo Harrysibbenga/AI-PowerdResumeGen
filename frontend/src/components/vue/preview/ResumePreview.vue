@@ -21,208 +21,21 @@
           </div>
 
           <!-- Action Buttons -->
-          <div class="flex items-center space-x-3">
-            <button
-              @click="regenerateContent"
-              :disabled="regenerating"
-              class="flex items-center px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              <svg
-                v-if="!regenerating"
-                class="w-4 h-4 mr-2"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
-                  clip-rule="evenodd"
-                ></path>
-              </svg>
-              <svg
-                v-else
-                class="animate-spin w-4 h-4 mr-2"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
-                ></path>
-              </svg>
-              {{ regenerating ? "Regenerating..." : "Regenerate" }}
-            </button>
-
-            <button
-              @click="printResume"
-              class="flex items-center px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fill-rule="evenodd"
-                  d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zM5 14H4v-3h1v3zm1 0v2h6v-2H6zm0-1h6v-2H6v2z"
-                  clip-rule="evenodd"
-                ></path>
-              </svg>
-              Print
-            </button>
-
-            <button
-              @click="editResume"
-              class="flex items-center px-3 py-2 text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-            >
-              <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"
-                ></path>
-              </svg>
-              Edit Resume
-            </button>
-
-            <!-- Export Dropdown -->
-            <div class="relative" ref="exportDropdown">
-              <button
-                @click="toggleExportMenu"
-                :disabled="exporting"
-                class="flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:bg-primary-400 transition-colors"
-              >
-                <svg
-                  v-if="!exporting"
-                  class="w-4 h-4 mr-2"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
-                    clip-rule="evenodd"
-                  ></path>
-                </svg>
-                <svg
-                  v-else
-                  class="animate-spin w-4 h-4 mr-2"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
-                  ></path>
-                </svg>
-                {{ exporting ? "Exporting..." : "Export" }}
-                <svg
-                  v-if="!exporting"
-                  class="w-4 h-4 ml-1"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                    clip-rule="evenodd"
-                  ></path>
-                </svg>
-              </button>
-
-              <!-- Export Menu -->
-              <div
-                v-if="showExportMenu"
-                class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 z-10"
-              >
-                <div class="py-1">
-                  <button
-                    @click="exportResume('pdf')"
-                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    <svg
-                      class="w-4 h-4 inline mr-2"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fill-rule="evenodd"
-                        d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
-                        clip-rule="evenodd"
-                      ></path>
-                    </svg>
-                    Export as PDF
-                  </button>
-                  <button
-                    @click="exportResume('docx')"
-                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    <svg
-                      class="w-4 h-4 inline mr-2"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fill-rule="evenodd"
-                        d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm3 5a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z"
-                        clip-rule="evenodd"
-                      ></path>
-                    </svg>
-                    Export as Word
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <ResumeActions
+            :regenerating="regenerating"
+            :exporting="exporting"
+            :show-export-menu="showExportMenu"
+            @regenerate="regenerateContent"
+            @print="printResume"
+            @edit="editResume"
+            @export="exportResume"
+            @toggle-export="toggleExportMenu"
+            ref="exportDropdown"
+          />
         </div>
 
         <!-- Resume Metadata -->
-        <div
-          v-if="resumeMetadata"
-          class="mt-3 flex items-center space-x-6 text-sm text-gray-500"
-        >
-          <div class="text-sm text-gray-500">
-            <span>Title: </span>
-            <span v-if="resumeMetadata" class="font-medium text-gray-700">{{
-              resumeMetadata.title
-            }}</span>
-          </div>
-          <span v-if="resumeMetadata.target_job_title" class="flex items-center">
-            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fill-rule="evenodd"
-                d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-            {{ resumeMetadata.target_job_title }}
-            <span v-if="resumeMetadata.target_job_role" class="ml-1"
-              >({{ resumeMetadata.target_job_role }})</span
-            >
-          </span>
-          <span v-if="resumeMetadata.industry" class="flex items-center">
-            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fill-rule="evenodd"
-                d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-            {{ formatIndustry(resumeMetadata.industry) }}
-          </span>
-          <span v-if="resumeMetadata.template_id" class="flex items-center">
-            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fill-rule="evenodd"
-                d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-            {{ formatTemplate(resumeMetadata.template_id) }} Template
-          </span>
-          <span v-if="resumeMetadata.word_count" class="flex items-center">
-            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fill-rule="evenodd"
-                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-            {{ resumeMetadata.word_count.toLocaleString() }} words
-          </span>
-        </div>
+        <ResumeMetadata :metadata="resumeMetadata" />
       </div>
     </div>
 
@@ -263,267 +76,78 @@
       <!-- Resume Content -->
       <div v-else class="bg-white shadow-lg rounded-lg overflow-hidden">
         <!-- Header Section -->
-        <header
-          class="bg-gradient-to-r from-gray-50 to-white p-8 border-b border-gray-200"
-        >
-          <div class="text-center">
-            <h1 class="text-4xl font-bold text-gray-900 mb-3">
-              {{
-                resumeData.sections?.personal_info?.name ||
-                resumeData.profile?.name ||
-                "Resume Preview"
-              }}
-            </h1>
-
-            <!-- Contact Information -->
-            <div
-              class="flex flex-wrap justify-center items-center gap-4 text-gray-600 mb-4"
-            >
-              <span v-if="getContactInfo().email" class="flex items-center">
-                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                  <path
-                    d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"
-                  ></path>
-                  <path
-                    d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"
-                  ></path>
-                </svg>
-                {{ getContactInfo().email }}
-              </span>
-              <span v-if="getContactInfo().phone" class="flex items-center">
-                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                  <path
-                    d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"
-                  ></path>
-                </svg>
-                {{ getContactInfo().phone }}
-              </span>
-              <span v-if="getContactInfo().location" class="flex items-center">
-                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                  <path
-                    fill-rule="evenodd"
-                    d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
-                    clip-rule="evenodd"
-                  ></path>
-                </svg>
-                {{ getContactInfo().location }}
-              </span>
-              <span v-if="getContactInfo().linkedin" class="flex items-center">
-                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                  <path
-                    fill-rule="evenodd"
-                    d="M16.338 16.338H13.67V12.16c0-.995-.017-2.277-1.387-2.277-1.39 0-1.601 1.086-1.601 2.207v4.248H8.014v-8.59h2.559v1.174h.037c.356-.675 1.227-1.387 2.526-1.387 2.703 0 3.203 1.778 3.203 4.092v4.711zM5.005 6.575a1.548 1.548 0 11-.003-3.096 1.548 1.548 0 01.003 3.096zm-1.337 9.763H6.34v-8.59H3.667v8.59zM17.668 1H2.328C1.595 1 1 1.581 1 2.298v15.403C1 18.418 1.595 19 2.328 19h15.34c.734 0 1.332-.582 1.332-1.299V2.298C19 1.581 18.402 1 17.668 1z"
-                    clip-rule="evenodd"
-                  ></path>
-                </svg>
-                <a
-                  :href="getContactInfo().linkedin"
-                  target="_blank"
-                  class="text-blue-600 hover:text-blue-800"
-                  >LinkedIn</a
-                >
-              </span>
-            </div>
-          </div>
-        </header>
+        <ResumeHeader :personal-info="getPersonalInfo()" />
 
         <div class="p-8">
           <!-- Professional Summary -->
-          <section v-if="resumeData.sections?.professional_summary" class="mb-8">
-            <h2 class="section-header">Professional Summary</h2>
+          <section v-if="getProfessionalSummary()" class="mb-8">
+            <SectionHeader title="Professional Summary" />
             <div class="prose text-gray-700 leading-relaxed">
-              <p>{{ resumeData.sections.professional_summary }}</p>
+              <p>{{ getProfessionalSummary() }}</p>
             </div>
           </section>
 
           <!-- Core Competencies -->
-          <section v-if="resumeData.sections?.core_competencies?.length" class="mb-8">
-            <h2 class="section-header">Core Competencies</h2>
+          <section v-if="getCoreCompetencies()?.length" class="mb-8">
+            <SectionHeader title="Core Competencies" />
             <div class="flex flex-wrap gap-2">
-              <span
-                v-for="(skill, index) in resumeData.sections.core_competencies"
+              <SkillPill
+                v-for="(skill, index) in getCoreCompetencies()"
                 :key="`competency-${index}`"
-                class="inline-block px-3 py-1.5 bg-primary-100 text-primary-800 rounded-full text-sm font-medium"
-              >
-                {{ skill }}
-              </span>
+                :label="skill"
+                variant="primary"
+              />
             </div>
           </section>
 
           <!-- Professional Experience -->
-          <section v-if="resumeData.sections?.experience?.length" class="mb-8">
-            <h2 class="section-header">Professional Experience</h2>
+          <section v-if="getWorkExperience()?.length" class="mb-8">
+            <SectionHeader title="Professional Experience" />
             <div class="space-y-6">
-              <div
-                v-for="(exp, index) in resumeData.sections.experience"
+              <ExperienceCard
+                v-for="(exp, index) in getWorkExperience()"
                 :key="`exp-${index}`"
-                class="experience-card"
-              >
-                <div
-                  class="flex flex-col lg:flex-row lg:justify-between lg:items-start mb-3"
-                >
-                  <div class="flex-1">
-                    <h3 class="text-xl font-bold text-gray-900">{{ exp.title }}</h3>
-                    <p class="text-lg text-primary-600 font-semibold">
-                      {{ exp.company }}
-                    </p>
-                    <p v-if="exp.location" class="text-gray-500">{{ exp.location }}</p>
-                  </div>
-                  <div class="text-sm text-gray-500 mt-2 lg:mt-0 lg:text-right">
-                    <p class="font-medium">
-                      {{ formatDateRange(exp.startDate, exp.endDate, exp.current) }}
-                    </p>
-                  </div>
-                </div>
-
-                <!-- Achievements -->
-                <div v-if="exp.achievements?.length" class="mt-4">
-                  <ul class="space-y-2">
-                    <li
-                      v-for="(achievement, achIndex) in exp.achievements"
-                      :key="`achievement-${index}-${achIndex}`"
-                      class="flex items-start"
-                    >
-                      <span class="text-primary-500 mr-3 mt-1.5 flex-shrink-0">•</span>
-                      <span class="text-gray-700 leading-relaxed">{{ achievement }}</span>
-                    </li>
-                  </ul>
-                </div>
-
-                <!-- Legacy description support -->
-                <div v-else-if="exp.description" class="mt-4">
-                  <p class="text-gray-700 leading-relaxed">{{ exp.description }}</p>
-                </div>
-              </div>
+                :experience="exp"
+              />
             </div>
           </section>
 
           <!-- Technical Skills -->
-          <section v-if="resumeData.sections?.technical_skills" class="mb-8">
-            <h2 class="section-header">Technical Skills</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div
-                v-for="(skillList, category) in resumeData.sections.technical_skills"
-                :key="category"
-                class="skill-category"
-              >
-                <h3 class="font-semibold text-gray-900 mb-3 capitalize">
-                  {{ formatSkillCategory(category) }}
-                </h3>
-                <div class="flex flex-wrap gap-2">
-                  <span
-                    v-for="(skill, skillIndex) in skillList"
-                    :key="`skill-${category}-${skillIndex}`"
-                    class="inline-block px-2.5 py-1 text-sm bg-gray-100 text-gray-800 rounded-md"
-                  >
-                    {{ skill }}
-                  </span>
-                </div>
-              </div>
-            </div>
+          <section v-if="getTechnicalSkills()" class="mb-8">
+            <SectionHeader title="Technical Skills" />
+            <TechnicalSkillsSection :skills="getTechnicalSkills()" />
           </section>
 
           <!-- Education -->
-          <section v-if="resumeData.sections?.education?.length" class="mb-8">
-            <h2 class="section-header">Education</h2>
+          <section v-if="getEducation()?.length" class="mb-8">
+            <SectionHeader title="Education" />
             <div class="space-y-4">
-              <div
-                v-for="(edu, index) in resumeData.sections.education"
+              <EducationCard
+                v-for="(edu, index) in getEducation()"
                 :key="`edu-${index}`"
-                class="education-card"
-              >
-                <div class="flex flex-col lg:flex-row lg:justify-between lg:items-start">
-                  <div class="flex-1">
-                    <h3 class="text-lg font-bold text-gray-900">{{ edu.degree }}</h3>
-                    <p class="text-primary-600 font-semibold">{{ edu.institution }}</p>
-                    <p v-if="edu.location" class="text-gray-500">{{ edu.location }}</p>
-                    <p v-if="edu.gpa" class="text-sm text-gray-600 mt-1">
-                      GPA: {{ edu.gpa }}
-                    </p>
-                    <p v-if="edu.honors" class="text-sm text-gray-600">
-                      {{ edu.honors }}
-                    </p>
-                  </div>
-                  <div class="text-sm text-gray-500 mt-2 lg:mt-0 lg:text-right">
-                    <p class="font-medium">{{ formatEducationDate(edu) }}</p>
-                  </div>
-                </div>
-
-                <!-- Relevant Coursework -->
-                <div v-if="edu.relevant_coursework?.length" class="mt-3">
-                  <p class="text-sm font-medium text-gray-700 mb-1">
-                    Relevant Coursework:
-                  </p>
-                  <p class="text-sm text-gray-600">
-                    {{ edu.relevant_coursework.join(", ") }}
-                  </p>
-                </div>
-
-                <!-- Description -->
-                <div v-if="edu.description" class="mt-3">
-                  <p class="text-gray-700">{{ edu.description }}</p>
-                </div>
-              </div>
+                :education="edu"
+              />
             </div>
           </section>
 
-          <!-- Projects -->
-          <section v-if="resumeData.sections?.projects?.length" class="mb-8">
-            <h2 class="section-header">Projects</h2>
+          <!-- Notable Projects -->
+          <section v-if="getNotableProjects()?.length" class="mb-8">
+            <SectionHeader title="Notable Projects" />
             <div class="space-y-6">
-              <div
-                v-for="(project, index) in resumeData.sections.projects"
+              <ProjectCard
+                v-for="(project, index) in getNotableProjects()"
                 :key="`project-${index}`"
-                class="project-card"
-              >
-                <div
-                  class="flex flex-col lg:flex-row lg:justify-between lg:items-start mb-3"
-                >
-                  <h3 class="text-lg font-bold text-gray-900">
-                    {{ project.name || project.title }}
-                  </h3>
-                  <a
-                    v-if="project.url"
-                    :href="project.url"
-                    target="_blank"
-                    class="text-primary-600 hover:text-primary-800 text-sm font-medium"
-                  >
-                    View Project →
-                  </a>
-                </div>
-
-                <p v-if="project.description" class="text-gray-700 mb-3 leading-relaxed">
-                  {{ project.description }}
-                </p>
-
-                <!-- Technologies -->
-                <div v-if="project.technologies?.length" class="mb-3">
-                  <p class="text-sm font-medium text-gray-700 mb-2">Technologies:</p>
-                  <div class="flex flex-wrap gap-1">
-                    <span
-                      v-for="tech in project.technologies"
-                      :key="tech"
-                      class="inline-block px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded"
-                    >
-                      {{ tech }}
-                    </span>
-                  </div>
-                </div>
-
-                <!-- Outcomes -->
-                <div v-if="project.outcomes" class="text-sm text-gray-600">
-                  <strong>Outcomes:</strong> {{ project.outcomes }}
-                </div>
-              </div>
+                :project="project"
+              />
             </div>
           </section>
 
           <!-- Certifications -->
-          <section v-if="resumeData.sections?.certifications?.length" class="mb-8">
-            <h2 class="section-header">Certifications</h2>
+          <section v-if="getCertifications()?.length" class="mb-8">
+            <SectionHeader title="Certifications" />
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div
-                v-for="(cert, index) in resumeData.sections.certifications"
+                v-for="(cert, index) in getCertifications()"
                 :key="`cert-${index}`"
                 class="flex items-center p-3 border border-gray-200 rounded-lg"
               >
@@ -543,90 +167,17 @@
             </div>
           </section>
 
-          <!-- Additional Sections -->
-          <section v-if="resumeData.sections?.additional_sections" class="mb-8">
-            <!-- Languages -->
-            <div
-              v-if="resumeData.sections.additional_sections.languages?.length"
-              class="mb-6"
-            >
-              <h3 class="text-lg font-semibold text-gray-900 mb-3">Languages</h3>
-              <div class="flex flex-wrap gap-3">
-                <span
-                  v-for="(language, index) in resumeData.sections.additional_sections
-                    .languages"
-                  :key="`lang-${index}`"
-                  class="inline-block px-3 py-1.5 bg-green-100 text-green-800 rounded-full text-sm"
-                >
-                  {{ language }}
-                </span>
-              </div>
-            </div>
-
-            <!-- Awards -->
-            <div
-              v-if="resumeData.sections.additional_sections.awards?.length"
-              class="mb-6"
-            >
-              <h3 class="text-lg font-semibold text-gray-900 mb-3">
-                Awards & Recognition
-              </h3>
-              <ul class="space-y-2">
-                <li
-                  v-for="(award, index) in resumeData.sections.additional_sections.awards"
-                  :key="`award-${index}`"
-                  class="flex items-start"
-                >
-                  <svg
-                    class="w-5 h-5 text-yellow-500 mr-2 mt-0.5 flex-shrink-0"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
-                    ></path>
-                  </svg>
-                  <span class="text-gray-700">{{ award }}</span>
-                </li>
-              </ul>
-            </div>
-
-            <!-- Publications -->
-            <div
-              v-if="resumeData.sections.additional_sections.publications?.length"
-              class="mb-6"
-            >
-              <h3 class="text-lg font-semibold text-gray-900 mb-3">Publications</h3>
-              <ul class="space-y-2">
-                <li
-                  v-for="(publication, index) in resumeData.sections.additional_sections
-                    .publications"
-                  :key="`pub-${index}`"
-                  class="text-gray-700"
-                >
-                  {{ publication }}
-                </li>
-              </ul>
-            </div>
-
-            <!-- Volunteer Experience -->
-            <div
-              v-if="resumeData.sections.additional_sections.volunteer_experience?.length"
-              class="mb-6"
-            >
-              <h3 class="text-lg font-semibold text-gray-900 mb-3">
-                Volunteer Experience
-              </h3>
-              <ul class="space-y-2">
-                <li
-                  v-for="(volunteer, index) in resumeData.sections.additional_sections
-                    .volunteer_experience"
-                  :key="`volunteer-${index}`"
-                  class="text-gray-700"
-                >
-                  {{ volunteer }}
-                </li>
-              </ul>
+          <!-- Languages -->
+          <section v-if="getLanguages()?.length" class="mb-8">
+            <SectionHeader title="Languages" />
+            <div class="flex flex-wrap gap-2">
+              <SkillPill
+                v-for="(language, index) in getLanguages()"
+                :key="`lang-${index}`"
+                :label="language.language"
+                :sublabel="language.proficiency"
+                variant="green"
+              />
             </div>
           </section>
         </div>
@@ -636,10 +187,21 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import { useFirebase } from "@/composables/useFirebase";
 import { useToast } from "@/composables/useToast";
 import { usePrintResume } from "@/composables/usePrintResume";
+
+// Import components
+import SkillPill from "@/components/vue/ui/SkillPill.vue";
+import SectionHeader from "@/components/vue/ui/SectionHeader.vue";
+import ResumeHeader from "@/components/vue/resume/ResumeHeader.vue";
+import ResumeMetadata from "@/components/vue/resume/ResumeMetadata.vue";
+import ResumeActions from "@/components/vue/resume/ResumeActions.vue";
+import ExperienceCard from "@/components/vue/resume/ExperienceCard.vue";
+import ProjectCard from "@/components/vue/resume/ProjectCard.vue";
+import EducationCard from "@/components/vue/resume/EducationCard.vue";
+import TechnicalSkillsSection from "@/components/vue/resume/TechnicalSkillsSection.vue";
 
 const props = defineProps({
   resumeId: {
@@ -651,6 +213,8 @@ const props = defineProps({
 const resumeData = ref({
   sections: {},
   profile: {},
+  ai_content: {},
+  profile_data: {},
 });
 
 const resumeMetadata = ref(null);
@@ -666,72 +230,172 @@ const { success, error: showError } = useToast();
 
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://localhost:8000";
 
-// Helper methods
-const formatIndustry = (industry) => {
-  return industry.charAt(0).toUpperCase() + industry.slice(1).replace("_", " ");
-};
-
-const formatTemplate = (template) => {
-  return template.charAt(0).toUpperCase() + template.slice(1);
-};
-
-const formatSkillCategory = (category) => {
-  return category.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase());
-};
-
-const getContactInfo = () => {
-  const personal = resumeData.value.sections?.personal_info || {};
-  const contact = resumeData.value.sections?.contact_info || {};
-  const profile = resumeData.value.profile || {};
+// Helper methods to extract data from multiple possible sources
+const getPersonalInfo = () => {
+  const aiContent = resumeData.value.ai_content || {};
+  const profileData = resumeData.value.profile_data || {};
+  const sections = resumeData.value.sections || {};
 
   return {
-    email: personal.email || contact.email || profile.email || "",
-    phone: personal.phone || contact.phone || profile.phone || "",
-    location: personal.location || contact.location || profile.location || "",
-    linkedin: personal.linkedin || contact.linkedin || profile.linkedin || "",
+    name: profileData.fullName || sections.personal_info?.name || "John Doe",
+    email:
+      profileData.email ||
+      sections.personal_info?.email ||
+      sections.contact_info?.email ||
+      "",
+    phone:
+      profileData.phone ||
+      sections.personal_info?.phone ||
+      sections.contact_info?.phone ||
+      "",
+    location:
+      profileData.location ||
+      sections.personal_info?.location ||
+      sections.contact_info?.location ||
+      "",
+    linkedin:
+      profileData.linkedin ||
+      sections.personal_info?.linkedin ||
+      sections.contact_info?.linkedin ||
+      "",
   };
 };
 
-const formatDateRange = (startDate, endDate, isCurrent = false) => {
-  if (!startDate) return "N/A";
-  const start = formatDate(startDate);
-  const end = isCurrent || !endDate ? "Present" : formatDate(endDate);
-  return `${start} - ${end}`;
+const getProfessionalSummary = () => {
+  const aiContent = resumeData.value.ai_content || {};
+  const profileData = resumeData.value.profile_data || {};
+  const sections = resumeData.value.sections || {};
+
+  return (
+    aiContent.professional_summary ||
+    profileData.summary ||
+    sections.professional_summary ||
+    sections.summary ||
+    ""
+  );
 };
 
-const formatDate = (dateString) => {
-  if (!dateString) return "";
-  try {
-    // Handle various date formats
-    if (typeof dateString === "number") {
-      return dateString.toString();
-    }
+const getCoreCompetencies = () => {
+  const aiContent = resumeData.value.ai_content || {};
+  const profileData = resumeData.value.profile_data || {};
+  const sections = resumeData.value.sections || {};
 
-    if (dateString.includes("-")) {
-      const [year, month] = dateString.split("-");
-      const date = new Date(year, month - 1);
-      return date.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-      });
-    }
-
-    return dateString;
-  } catch {
-    return dateString;
-  }
+  return (
+    aiContent.core_competencies ||
+    profileData.skills ||
+    sections.core_competencies ||
+    sections.skills ||
+    []
+  );
 };
 
-const formatEducationDate = (edu) => {
-  if (edu.graduation_date) {
-    return formatDate(edu.graduation_date);
+const getWorkExperience = () => {
+  const aiContent = resumeData.value.ai_content || {};
+  const profileData = resumeData.value.profile_data || {};
+  const sections = resumeData.value.sections || {};
+
+  return (
+    aiContent.professional_experience ||
+    profileData.workExperience ||
+    sections.experience ||
+    sections.work_experience ||
+    []
+  );
+};
+
+const getTechnicalSkills = () => {
+  const aiContent = resumeData.value.ai_content || {};
+  const profileData = resumeData.value.profile_data || {};
+  const sections = resumeData.value.sections || {};
+
+  // If we have technical_skills object, return it
+  if (aiContent.technical_skills || sections.technical_skills) {
+    return aiContent.technical_skills || sections.technical_skills;
   }
 
-  if (edu.endYear) {
-    return edu.startYear ? `${edu.startYear} - ${edu.endYear}` : edu.endYear.toString();
+  // Otherwise, try to construct from available skill data
+  const skills = profileData.skills || sections.skills || [];
+  const primaryTech = aiContent.technical_skills?.primary_technologies || [];
+  const secondarySkills = aiContent.technical_skills?.secondary_skills || [];
+
+  if (primaryTech.length || secondarySkills.length) {
+    return {
+      primary_technologies: primaryTech,
+      secondary_skills: secondarySkills,
+    };
   }
 
-  return edu.startYear ? edu.startYear.toString() : "N/A";
+  // If we just have a flat array of skills, group them
+  if (skills.length > 0) {
+    return {
+      technical_skills: skills,
+    };
+  }
+
+  return null;
+};
+
+const getEducation = () => {
+  const aiContent = resumeData.value.ai_content || {};
+  const profileData = resumeData.value.profile_data || {};
+  const sections = resumeData.value.sections || {};
+
+  return aiContent.education || profileData.education || sections.education || [];
+};
+
+const getNotableProjects = () => {
+  const aiContent = resumeData.value.ai_content || {};
+  const profileData = resumeData.value.profile_data || {};
+  const sections = resumeData.value.sections || {};
+
+  return (
+    aiContent.notable_projects ||
+    profileData.projects ||
+    sections.projects ||
+    sections.notable_projects ||
+    []
+  );
+};
+
+const getCertifications = () => {
+  const aiContent = resumeData.value.ai_content || {};
+  const profileData = resumeData.value.profile_data || {};
+  const sections = resumeData.value.sections || {};
+
+  return (
+    aiContent.technical_skills?.certifications ||
+    profileData.certifications ||
+    sections.certifications ||
+    []
+  );
+};
+
+const getLanguages = () => {
+  const aiContent = resumeData.value.ai_content || {};
+  const profileData = resumeData.value.profile_data || {};
+  const sections = resumeData.value.sections || {};
+
+  // Check all possible locations for languages data
+  const languages =
+    profileData.languages ||
+    aiContent.languages ||
+    sections.languages ||
+    sections.additional_sections?.languages ||
+    [];
+
+  // Ensure we return an array of objects with language and proficiency
+  if (Array.isArray(languages) && languages.length > 0) {
+    // If it's already in the correct format
+    if (typeof languages[0] === "object" && languages[0].language) {
+      return languages;
+    }
+    // If it's just an array of strings, convert to object format
+    if (typeof languages[0] === "string") {
+      return languages.map((lang) => ({ language: lang, proficiency: "Proficient" }));
+    }
+  }
+
+  return [];
 };
 
 const getResumeId = () => {
@@ -778,11 +442,22 @@ const loadResume = async () => {
 
     const data = await response.json();
 
-    // Store both resume content and metadata
+    // Store all possible data sources with proper reactivity
     resumeData.value = {
-      sections: data.sections || data.ai_content || {},
-      profile: data.profile_data || {},
+      sections: data.sections || {},
+      profile: data.profile || {},
+      ai_content: data.ai_content || data.sections || {},
+      profile_data: data.profile_data || {},
+      rawData: data,
     };
+
+    // Debug log to check languages data
+    console.log("Languages data check:", {
+      profileDataLanguages: data.profile_data?.languages,
+      aiContentLanguages: data.ai_content?.languages,
+      sectionsLanguages: data.sections?.languages,
+      getLanguagesResult: getLanguages(),
+    });
 
     resumeMetadata.value = {
       id: data.id,
@@ -832,7 +507,7 @@ const exportResume = async (format) => {
         body: JSON.stringify({
           resumeId: resumeId,
           format: format,
-          content: resumeData.value.sections,
+          content: resumeData.value.ai_content || resumeData.value.sections,
         }),
       }
     );
@@ -950,7 +625,8 @@ const regenerateContent = async () => {
     const data = await response.json();
 
     // Update the resume data with new content
-    resumeData.value.sections = data.sections;
+    resumeData.value.ai_content = data.ai_content || data.sections;
+    resumeData.value.sections = data.sections || data.ai_content;
     success("Resume content regenerated successfully!");
   } catch (err) {
     console.error("Error regenerating content:", err);
@@ -994,30 +670,6 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.section-header {
-  @apply text-2xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-primary-500;
-}
-
-.experience-card {
-  @apply border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow bg-gray-50;
-}
-
-.education-card {
-  @apply border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow bg-gray-50;
-}
-
-.project-card {
-  @apply border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow bg-gray-50;
-}
-
-.skill-category {
-  @apply border border-gray-200 rounded-lg p-4 bg-gray-50;
-}
-
-.prose {
-  @apply max-w-none;
-}
-
 .animate-spin {
   animation: spin 1s linear infinite;
 }

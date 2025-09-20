@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from typing import Dict, Optional
+from datetime import datetime
+
 from app.dependencies.auth_dependencies import get_current_user
 from app.services.gpt_service import generate_resume_with_gpt
 from app.services.deepseek_service import generate_resume_with_deepseek
@@ -17,13 +19,12 @@ from app.helpers.resume_helpers import (
     count_resume_sections,
     estimate_word_count
 )
-from datetime import datetime
 
 router = APIRouter()
 
+
 @router.get("/{resume_id}", response_model=ResumeResponse)
 async def get_resume(resume_id: str, user: Dict = Depends(get_current_user)):
-    """Get a specific resume by ID"""
     try:
         user_id = user["uid"]
         resume_ref = db.collection("resumes").document(resume_id)
@@ -42,13 +43,18 @@ async def get_resume(resume_id: str, user: Dict = Depends(get_current_user)):
             title=resume_data["title"],
             target_job_title=resume_data["target_job_title"],
             target_job_role=resume_data.get("target_job_role"),
+            target_company=resume_data.get("target_company"),
             sections=resume_data["ai_content"],
-            message="Resume retrieved successfully",
+            profile_data=resume_data.get("profile_data"),
             created_at=resume_data["created_at"],
+            updated_at=resume_data.get("updated_at"),
             summary_excerpt=resume_data.get("summary_excerpt"),
             industry=resume_data["industry"],
             template_id=resume_data["template_id"],
-            export_status=resume_data.get("export_status", ExportStatus.FREE.value)
+            export_status=resume_data.get("export_status", ExportStatus.FREE.value),
+            version=resume_data.get("version", 1),
+            sections_count=resume_data.get("sections_count"),
+            word_count=resume_data.get("word_count")
         )
 
     except HTTPException:
@@ -56,86 +62,63 @@ async def get_resume(resume_id: str, user: Dict = Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving resume: {str(e)}")
 
+
 @router.get("/", response_model=ResumeListResponse)
 async def list_resumes(
     user: Dict = Depends(get_current_user),
-    page: int = Query(1, ge=1, description="Page number"),
-    per_page: int = Query(10, ge=1, le=100, description="Items per page"),
-    industry: Optional[str] = Query(None, description="Filter by industry"),
-    template: Optional[str] = Query(None, description="Filter by template"),
-    search: Optional[str] = Query(None, description="Search in title, job title, or role"),
-    sort_by: str = Query("created_at", description="Sort field"),
-    sort_order: str = Query("desc", regex="^(asc|desc)$", description="Sort order")
+    page: int = Query(1, ge=1),
+    per_page: int = Query(10, ge=1, le=100),
+    industry: Optional[str] = None,
+    template: Optional[str] = None,
+    search: Optional[str] = None,
+    sort_by: str = Query("created_at"),
+    sort_order: str = Query("desc", regex="^(asc|desc)$")
 ):
-    """List user's resumes with pagination, filtering, and sorting"""
     try:
         user_id = user["uid"]
-        
-        # Build base query
         query = db.collection("resumes").where("user_id", "==", user_id)
-        
-        # Apply filters
+
         if industry:
             query = query.where("industry", "==", industry)
         if template:
             query = query.where("template_id", "==", template)
-        
-        # Get all documents for total count and filtering
+
         all_docs = list(query.stream())
-        
-        # Apply search filter and deleted_at filter
         filtered_docs = []
         for doc in all_docs:
             data = doc.to_dict()
-            
-            # Filter out resumes that have deleted_at field
             if "deleted_at" in data:
                 continue
-            
             if search:
                 search_text = f"{data.get('title', '')} {data.get('target_job_title', '')} {data.get('target_job_role', '')}".lower()
                 if search.lower() not in search_text:
                     continue
-            
             filtered_docs.append(data)
-        
+
         total = len(filtered_docs)
-        
-        # Apply sorting
         reverse_sort = sort_order == "desc"
-        if sort_by == "created_at":
-            filtered_docs.sort(key=lambda x: x.get("created_at", datetime.min), reverse=reverse_sort)
-        elif sort_by == "updated_at":
-            filtered_docs.sort(key=lambda x: x.get("updated_at", datetime.min), reverse=reverse_sort)
-        elif sort_by == "title":
-            filtered_docs.sort(key=lambda x: x.get("title", "").lower(), reverse=reverse_sort)
-        elif sort_by == "industry":
-            filtered_docs.sort(key=lambda x: x.get("industry", "").lower(), reverse=reverse_sort)
-        
-        # Apply pagination
+        filtered_docs.sort(key=lambda x: x.get(sort_by, datetime.min), reverse=reverse_sort)
+
         start_idx = (page - 1) * per_page
         end_idx = start_idx + per_page
         paginated_docs = filtered_docs[start_idx:end_idx]
-        
-        # Convert to ResumeListItem objects
-        resumes = []
-        for data in paginated_docs:
-            resumes.append(ResumeListItem(
-                id=data["id"],
-                title=data["title"],
-                target_job_title=data["target_job_title"],
-                target_job_role=data.get("target_job_role"),
-                target_company=data.get("target_company"),
-                industry=data["industry"],
-                template_id=data["template_id"],
-                export_status=data.get("export_status", ExportStatus.FREE.value),
-                created_at=data["created_at"],
-                updated_at=data.get("updated_at"),
-                summary_excerpt=data.get("summary_excerpt"),
-                sections_count=data.get("sections_count", 0),
-                word_count=data.get("word_count")
-            ))
-        
+
+        resumes = [ResumeListItem(
+            id=d["id"],
+            title=d["title"],
+            target_job_title=d["target_job_title"],
+            target_job_role=d.get("target_job_role"),
+            target_company=d.get("target_company"),
+            industry=d["industry"],
+            template_id=d["template_id"],
+            export_status=d.get("export_status", ExportStatus.FREE.value),
+            created_at=d["created_at"],
+            updated_at=d.get("updated_at"),
+            summary_excerpt=d.get("summary_excerpt"),
+            sections_count=d.get("sections_count", 0),
+            word_count=d.get("word_count")
+        ) for d in paginated_docs]
+
         return ResumeListResponse(
             resumes=resumes,
             total=total,
@@ -144,9 +127,10 @@ async def list_resumes(
             has_next=end_idx < total,
             has_prev=page > 1
         )
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error listing resumes: {str(e)}")
+
 
 @router.put("/{resume_id}", response_model=ResumeResponse)
 async def update_resume(
@@ -154,7 +138,6 @@ async def update_resume(
     request: ResumeUpdateRequest,
     user: Dict = Depends(get_current_user)
 ):
-    """Update an existing resume"""
     try:
         user_id = user["uid"]
         resume_ref = db.collection("resumes").document(resume_id)
@@ -168,99 +151,94 @@ async def update_resume(
         if resume_data["user_id"] != user_id:
             raise HTTPException(status_code=403, detail="Unauthorized access")
 
-        # Prepare updates
         updates = {"updated_at": datetime.now()}
-        regenerate_content = False
-        
-        # Update basic fields
+        regenerate_content = request.use_ai
+
         if request.title:
             updates["title"] = request.title
         if request.target_job_title:
             updates["target_job_title"] = request.target_job_title
-            regenerate_content = True
         if request.target_job_role:
             updates["target_job_role"] = request.target_job_role
-            regenerate_content = True
         if request.target_company:
             updates["target_company"] = request.target_company
-        if request.tone:
-            updates["tone"] = request.tone.value
-            regenerate_content = True
+        if request.ai_tone:
+            updates["ai_tone"] = request.ai_tone.value
+        if request.ai_length:
+            updates["ai_length"] = request.ai_length.value
         if request.template_id:
             updates["template_id"] = request.template_id.value
-            regenerate_content = True
+        if request.include_projects:
+            updates["include_projects"] = request.include_projects
+        if request.include_certifications:
+            updates["include_certifications"] = request.include_certifications
+        if request.include_languages:
+            updates["include_languages"] = request.include_languages
         if request.focus_keywords:
             updates["focus_keywords"] = request.focus_keywords
-            regenerate_content = True
+        if request.custom_sections:
+            updates["custom_sections"] = request.custom_sections
 
-        # If profile is updated, regenerate content
-        if request.profile:
-            updates["profile_data"] = request.profile.dict()
-            updates["industry"] = request.profile.industry
-            regenerate_content = True
+        if request.profile_data:
+            profile_dict = request.profile_data.dict()
+            updates["profile_data"] = profile_dict
+            updates["industry"] = profile_dict.get("industry")
+            updates["work_experience"] = profile_dict.get("work_experience")
+            updates["education"] = profile_dict.get("education")
+            updates["projects"] = profile_dict.get("projects")
 
-        # Regenerate AI content if needed
         if regenerate_content:
-            profile_data = request.profile.dict() if request.profile else resume_data["profile_data"]
-            tone = request.tone.value if request.tone else resume_data["tone"]
-            target_job_title = request.target_job_title or resume_data["target_job_title"]
+            profile_data = request.profile_data.dict() if request.profile_data else resume_data.get("profile_data")
+            tone = request.ai_tone.value if request.ai_tone else resume_data.get("ai_tone")
+            target_job_title = request.target_job_title or resume_data.get("target_job_title")
             target_job_role = request.target_job_role or resume_data.get("target_job_role")
             focus_keywords = request.focus_keywords or resume_data.get("focus_keywords")
-            template_id = request.template_id.value if request.template_id else resume_data["template_id"]
-            
-            if settings.USE_DEEPSEEK and settings.DEEPSEEK_API_KEY:
-                new_content = await generate_resume_with_deepseek(
-                    profile_data=profile_data,
-                    tone=tone,
-                    target_job_title=target_job_title,
-                    target_job_role=target_job_role,
-                    focus_keywords=focus_keywords,
-                    template_id=template_id
-                )
-            else:
-                new_content = await generate_resume_with_gpt(
-                    profile_data=profile_data,
-                    tone=tone,
-                    target_job_title=target_job_title,
-                    target_job_role=target_job_role,
-                    focus_keywords=focus_keywords,
-                    template_id=template_id
-                )
-            
+            template_id = request.template_id.value if request.template_id else resume_data.get("template_id")
+
+            new_content = await generate_resume_with_deepseek(
+                profile_data, tone, target_job_title, target_job_role, focus_keywords, template_id
+            ) if settings.USE_DEEPSEEK and settings.DEEPSEEK_API_KEY else await generate_resume_with_gpt(
+                profile_data, tone, target_job_title, target_job_role, focus_keywords, template_id
+            )
+
             updates["ai_content"] = new_content
             updates["summary_excerpt"] = generate_summary_excerpt(new_content)
             updates["sections_count"] = count_resume_sections(new_content)
             updates["word_count"] = estimate_word_count(new_content)
             updates["version"] = resume_data.get("version", 1) + 1
 
-        # Apply updates
         resume_ref.update(updates)
-        
-        # Return updated resume
         updated_resume = resume_ref.get().to_dict()
-        
+
         return ResumeResponse(
             id=updated_resume["id"],
             title=updated_resume["title"],
             target_job_title=updated_resume["target_job_title"],
             target_job_role=updated_resume.get("target_job_role"),
+            target_company=updated_resume.get("target_company"),
             sections=updated_resume["ai_content"],
-            message="Resume updated successfully!",
+            profile_data=updated_resume.get("profile_data"),
             created_at=updated_resume["created_at"],
+            updated_at=updated_resume.get("updated_at"),
             summary_excerpt=updated_resume.get("summary_excerpt"),
             industry=updated_resume["industry"],
             template_id=updated_resume["template_id"],
-            export_status=updated_resume.get("export_status", ExportStatus.FREE.value)
+            export_status=updated_resume.get("export_status", ExportStatus.FREE.value),
+            version=updated_resume.get("version", 1),
+            sections_count=updated_resume.get("sections_count"),
+            word_count=updated_resume.get("word_count")
         )
 
     except HTTPException:
         raise
     except Exception as e:
+        import traceback 
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error updating resume: {str(e)}")
+
 
 @router.delete("/{resume_id}")
 async def delete_resume(resume_id: str, user: Dict = Depends(get_current_user)):
-    """Delete a resume"""
     try:
         user_id = user["uid"]
         resume_ref = db.collection("resumes").document(resume_id)
@@ -274,12 +252,11 @@ async def delete_resume(resume_id: str, user: Dict = Depends(get_current_user)):
         if resume_data["user_id"] != user_id:
             raise HTTPException(status_code=403, detail="Unauthorized access")
 
-        # Soft delete by adding deleted_at timestamp
         resume_ref.update({
             "deleted_at": datetime.now(),
             "updated_at": datetime.now()
         })
-        
+
         return {"message": "Resume deleted successfully"}
 
     except HTTPException:
@@ -287,9 +264,9 @@ async def delete_resume(resume_id: str, user: Dict = Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error deleting resume: {str(e)}")
 
+
 @router.post("/{resume_id}/restore")
 async def restore_resume(resume_id: str, user: Dict = Depends(get_current_user)):
-    """Restore a soft-deleted resume"""
     try:
         user_id = user["uid"]
         resume_ref = db.collection("resumes").document(resume_id)
@@ -306,12 +283,11 @@ async def restore_resume(resume_id: str, user: Dict = Depends(get_current_user))
         if "deleted_at" not in resume_data:
             raise HTTPException(status_code=400, detail="Resume is not deleted")
 
-        # Remove deleted_at field to restore
         resume_ref.update({
             "deleted_at": None,
             "updated_at": datetime.now()
         })
-        
+
         return {"message": "Resume restored successfully"}
 
     except HTTPException:

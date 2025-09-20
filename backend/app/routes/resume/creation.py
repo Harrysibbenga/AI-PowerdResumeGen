@@ -17,95 +17,78 @@ from app.helpers.resume_helpers import (
 )
 import uuid
 from datetime import datetime
+from app.core.error import LoggedHTTPException
 
 router = APIRouter()
 
 @router.post("/", response_model=ResumeResponse)
-async def create_resume(
-    request: ResumeRequest,
-    user: Dict = Depends(get_current_user)
-):
-    """Create a new resume with AI generation"""
+async def create_resume(request: ResumeRequest, user: Dict = Depends(get_current_user)):
     try:
         user_id = user["uid"]
 
-        # Validate user input
-        if not request.profile.workExperience and not request.profile.education:
-            raise HTTPException(
-                status_code=400, 
+        if not request.profile_data.work_experience and not request.profile_data.education:
+            raise LoggedHTTPException(
+                status_code=400,
                 detail="At least one work experience or education entry is required"
             )
 
-        # Generate resume content using AI
-        if settings.USE_DEEPSEEK and settings.DEEPSEEK_API_KEY:
-            resume_content = await generate_resume_with_deepseek(
-                profile_data=request.profile.dict(), 
-                tone=request.aiTone.value,  
-                target_job_title=request.targetJobTitle,  
-                target_job_role=request.targetJobRole,   
-                focus_keywords=request.focusKeywords,    
-                template_id=request.template_id.value
-            )
-        else:
-            resume_content = await generate_resume_with_gpt(
-                profile_data=request.profile.dict(), 
-                tone=request.aiTone.value,  
-                target_job_title=request.targetJobTitle,  
-                target_job_role=request.targetJobRole,   
-                focus_keywords=request.focusKeywords,    
-                template_id=request.template_id.value
-            )
+        generator = generate_resume_with_deepseek if settings.USE_DEEPSEEK and settings.DEEPSEEK_API_KEY else generate_resume_with_gpt
+        resume_content = await generator(
+            profile_data=request.profile_data.dict(),
+            tone=request.ai_tone.value,
+            industry=request.industry,
+            target_job_title=request.target_job_title,
+            target_job_role=request.target_job_role,
+            focus_keywords=request.focus_keywords,
+            template_id=request.template_id.value
+        )
 
-        # Generate summary excerpt for card display
-        summary_excerpt = generate_summary_excerpt(resume_content)
-
-        # Create resume document
         resume_id = str(uuid.uuid4())
-        resume_ref = db.collection("resumes").document(resume_id)
+        summary_excerpt = generate_summary_excerpt(resume_content)
+        now = datetime.now()
 
         resume_data = {
             "id": resume_id,
             "user_id": user_id,
             "title": request.title,
-            "target_job_title": request.targetJobTitle,      
-            "target_job_role": request.targetJobRole,        
-            "target_company": request.targetCompany,         
-            "industry": request.profile.industry,
+            "target_job_title": request.target_job_title,
+            "target_job_role": request.target_job_role,
+            "target_company": request.target_company,
+            "industry": request.industry,
             "template_id": request.template_id.value,
-            "tone": request.aiTone.value,                    
-            "length": request.aiLength.value,                
-            "focus_keywords": request.focusKeywords,         
-            "use_ai": request.useAI,                         
-            "include_projects": request.includeProjects,     
-            "include_certifications": request.includeCertifications,  
-            "include_languages": request.includeLanguages,   
-            "profile_data": request.profile.dict(),
+            "tone": request.ai_tone.value,
+            "length": request.ai_length.value,
+            "focus_keywords": request.focus_keywords,
+            "use_ai": request.use_ai,
+            "include_projects": request.include_projects,
+            "include_certifications": request.include_certifications,
+            "include_languages": request.include_languages,
+            "profile_data": request.profile_data.dict(),
             "ai_content": resume_content,
             "summary_excerpt": summary_excerpt,
             "sections_count": count_resume_sections(resume_content),
             "word_count": estimate_word_count(resume_content),
             "export_status": ExportStatus.FREE.value,
-            "created_at": datetime.now(),
-            "updated_at": datetime.now(),
+            "created_at": now,
+            "updated_at": now,
             "version": 1
         }
 
-        # Add custom sections if provided
         if request.custom_sections:
             resume_data["custom_sections"] = request.custom_sections
 
-        resume_ref.set(resume_data)
+        db.collection("resumes").document(resume_id).set(resume_data)
 
         return ResumeResponse(
             id=resume_id,
             title=request.title,
-            target_job_title=request.targetJobTitle, 
-            target_job_role=request.targetJobRole,  
+            target_job_title=request.target_job_title,
+            target_job_role=request.target_job_role,
             sections=resume_content,
             message="Resume generated successfully!",
-            created_at=resume_data["created_at"],
+            created_at=now,
             summary_excerpt=summary_excerpt,
-            industry=request.profile.industry,
+            industry=request.industry,
             template_id=request.template_id,
             export_status=ExportStatus.FREE
         )
@@ -113,170 +96,120 @@ async def create_resume(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error generating resume: {str(e)}")
+        raise LoggedHTTPException(status_code=500, detail=f"Error generating resume: {str(e)}", exc=e)
 
-@router.post("/duplicate/{resume_id}", response_model=ResumeResponse)
-async def duplicate_resume(
-    resume_id: str,
-    user: Dict = Depends(get_current_user)
-):
-    """Duplicate an existing resume"""
+
+@router.post("/{resume_id}/duplicate", response_model=ResumeResponse)
+async def duplicate_resume(resume_id: str, user: Dict = Depends(get_current_user)):
     try:
         user_id = user["uid"]
-        
-        # Get original resume
-        original_ref = db.collection("resumes").document(resume_id)
-        original = original_ref.get()
+        original = db.collection("resumes").document(resume_id).get()
 
         if not original.exists:
             raise HTTPException(status_code=404, detail="Resume not found")
 
-        original_data = original.to_dict()
-
-        if original_data["user_id"] != user_id:
+        data = original.to_dict()
+        if data["user_id"] != user_id:
             raise HTTPException(status_code=403, detail="Unauthorized access")
 
-        # Create new resume with duplicated data
-        new_resume_id = str(uuid.uuid4())
-        new_resume_ref = db.collection("resumes").document(new_resume_id)
+        new_id = str(uuid.uuid4())
+        now = datetime.now()
 
-        # Copy data and update relevant fields
-        new_resume_data = original_data.copy()
-        new_resume_data.update({
-            "id": new_resume_id,
-            "title": f"{original_data['title']} (Copy)",
-            "created_at": datetime.now(),
-            "updated_at": datetime.now(),
-            "export_status": ExportStatus.FREE.value,
-            "version": 1
+        data.update({
+            "id": new_id,
+            "title": f"{data['title']} (Copy)",
+            "created_at": now,
+            "updated_at": now,
+            "version": 1,
+            "export_status": ExportStatus.FREE.value
         })
+        data.pop("deleted_at", None)
 
-        new_resume_ref.set(new_resume_data)
+        db.collection("resumes").document(new_id).set(data)
 
         return ResumeResponse(
-            id=new_resume_id,
-            title=new_resume_data["title"],
-            target_job_title=new_resume_data.get("target_job_title", new_resume_data.get("targetJobTitle")),  # Handle both field names
-            target_job_role=new_resume_data.get("target_job_role", new_resume_data.get("targetJobRole")),    # Handle both field names
-            sections=new_resume_data["ai_content"],
+            id=new_id,
+            title=data["title"],
+            target_job_title=data["target_job_title"],
+            target_job_role=data.get("target_job_role"),
+            sections=data["ai_content"],
+            profile_data=data.get("profile_data"),
             message="Resume duplicated successfully!",
-            created_at=new_resume_data["created_at"],
-            summary_excerpt=new_resume_data.get("summary_excerpt"),
-            industry=new_resume_data["industry"],
-            template_id=new_resume_data["template_id"],
-            export_status=ExportStatus.FREE
+            created_at=data["created_at"],
+            updated_at=data.get("updated_at"),
+            summary_excerpt=data.get("summary_excerpt"),
+            industry=data["industry"],
+            template_id=data["template_id"],
+            export_status=data.get("export_status", ExportStatus.FREE.value),
+            version=data.get("version", 1),
+            sections_count=data.get("sections_count"),
+            word_count=data.get("word_count")
         )
 
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error duplicating resume: {str(e)}")
+        raise LoggedHTTPException(status_code=500, detail=f"Error duplicating resume: {str(e)}", exc=e)
 
-@router.post("/regenerate/{resume_id}", response_model=ResumeResponse)
-async def regenerate_resume_content(
-    resume_id: str,
-    user: Dict = Depends(get_current_user)
-):
-    """Regenerate AI content for an existing resume"""
+
+@router.post("/{resume_id}/regenerate", response_model=ResumeResponse)
+async def regenerate_resume_content(resume_id: str, user: Dict = Depends(get_current_user)):
     try:
         user_id = user["uid"]
-        
-        # Get existing resume
-        resume_ref = db.collection("resumes").document(resume_id)
-        resume = resume_ref.get()
+        doc = db.collection("resumes").document(resume_id).get()
 
-        if not resume.exists:
-            raise HTTPException(status_code=404, detail="Resume not found")
+        if not doc.exists:
+            raise LoggedHTTPException(status_code=404, detail="Resume not found")
 
-        resume_data = resume.to_dict()
+        data = doc.to_dict()
 
-        if resume_data["user_id"] != user_id:
-            raise HTTPException(status_code=403, detail="Unauthorized access")
+        if data["user_id"] != user_id:
+            raise LoggedHTTPException(status_code=403, detail="Unauthorized access")
 
-        # Extract data with fallbacks for field name changes
-        target_job_title = resume_data.get("target_job_title") or resume_data.get("targetJobTitle")
-        target_job_role = resume_data.get("target_job_role") or resume_data.get("targetJobRole")
-        tone = resume_data.get("tone") or resume_data.get("aiTone", "professional")
-        focus_keywords = resume_data.get("focus_keywords") or resume_data.get("focusKeywords")
+        generator = generate_resume_with_deepseek if settings.USE_DEEPSEEK and settings.DEEPSEEK_API_KEY else generate_resume_with_gpt
+        new_content = await generator(
+            profile_data=data["profile_data"],
+            tone=data["tone"],
+            industry=data['industry'],
+            target_job_title=data["target_job_title"],
+            target_job_role=data.get("target_job_role"),
+            focus_keywords=data.get("focus_keywords"),
+            template_id=data["template_id"]
+        )
 
-        # Regenerate AI content
-        if settings.USE_DEEPSEEK and settings.DEEPSEEK_API_KEY:
-            new_content = await generate_resume_with_deepseek(
-                profile_data=resume_data["profile_data"], 
-                tone=tone,
-                target_job_title=target_job_title,
-                target_job_role=target_job_role,
-                focus_keywords=focus_keywords,
-                template_id=resume_data["template_id"]
-            )
-        else:
-            new_content = await generate_resume_with_gpt(
-                profile_data=resume_data["profile_data"], 
-                tone=tone,
-                target_job_title=target_job_title,
-                target_job_role=target_job_role,
-                focus_keywords=focus_keywords,
-                template_id=resume_data["template_id"]
-            )
-
-        # Update resume with new content
+        now = datetime.now()
         updates = {
             "ai_content": new_content,
             "summary_excerpt": generate_summary_excerpt(new_content),
             "sections_count": count_resume_sections(new_content),
             "word_count": estimate_word_count(new_content),
-            "updated_at": datetime.now(),
-            "version": resume_data.get("version", 1) + 1
+            "version": data.get("version", 1) + 1,
+            "updated_at": now
         }
 
-        resume_ref.update(updates)
-        
-        # Return updated resume
-        updated_data = {**resume_data, **updates}
+        db.collection("resumes").document(resume_id).update(updates)
+        updated = db.collection("resumes").document(resume_id).get().to_dict()
 
         return ResumeResponse(
-            id=resume_id,
-            title=updated_data["title"],
-            target_job_title=target_job_title,  # Use extracted value
-            target_job_role=target_job_role,    # Use extracted value
-            sections=updated_data["ai_content"],
+            id=updated["id"],
+            title=updated["title"],
+            target_job_title=updated["target_job_title"],
+            target_job_role=updated.get("target_job_role"),
+            sections=updated["ai_content"],
+            profile_data=updated.get("profile_data"),
             message="Resume content regenerated successfully!",
-            created_at=updated_data["created_at"],
-            summary_excerpt=updated_data["summary_excerpt"],
-            industry=updated_data["industry"],
-            template_id=updated_data["template_id"],
-            export_status=updated_data["export_status"]
+            created_at=updated["created_at"],
+            updated_at=updated.get("updated_at"),
+            summary_excerpt=updated.get("summary_excerpt"),
+            industry=updated["industry"],
+            template_id=updated["template_id"],
+            export_status=updated.get("export_status", ExportStatus.FREE.value),
+            version=updated.get("version", 1),
+            sections_count=updated.get("sections_count"),
+            word_count=updated.get("word_count")
         )
 
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error regenerating resume: {str(e)}")
-
-# Optional: Helper function to normalize field names across old/new data
-def normalize_resume_data(resume_data):
-    """Helper to handle field name transitions in stored data"""
-    normalized = resume_data.copy()
-    
-    # Handle field name mappings
-    field_mappings = {
-        "targetJobTitle": "target_job_title",
-        "targetJobRole": "target_job_role", 
-        "targetCompany": "target_company",
-        "aiTone": "tone",
-        "aiLength": "length",
-        "focusKeywords": "focus_keywords",
-        "includeProjects": "include_projects",
-        "includeCertifications": "include_certifications",
-        "includeLanguages": "include_languages",
-        "useAI": "use_ai"
-    }
-    
-    # Map new field names to old ones if they exist
-    for new_field, old_field in field_mappings.items():
-        if new_field in normalized and old_field not in normalized:
-            normalized[old_field] = normalized[new_field]
-        elif old_field in normalized and new_field not in normalized:
-            normalized[new_field] = normalized[old_field]
-    
-    return normalized
+        raise LoggedHTTPException(status_code=500, detail=f"Error regenerating resume content: {str(e)}", exc=e)

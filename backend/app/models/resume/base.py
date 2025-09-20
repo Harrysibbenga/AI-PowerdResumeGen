@@ -1,6 +1,4 @@
 from pydantic import BaseModel
-from typing import Optional, List, Dict, Any
-from datetime import datetime
 from enum import Enum
 
 class ExportFormat(str, Enum):
@@ -29,3 +27,8 @@ class ResumeTemplate(str, Enum):
     CREATIVE = "creative"
     MINIMAL = "minimal"
     EXECUTIVE = "executive"
+
+class SubscriptionPlan(str, Enum):
+    FREE = "free"
+    PREMIUM = "premium"
+    ENTERPRISE = "enterprise"

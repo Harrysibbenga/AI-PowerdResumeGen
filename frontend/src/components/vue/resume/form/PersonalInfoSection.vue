@@ -58,12 +58,26 @@ export default {
   props: {
     modelValue: { type: Object, required: true },
   },
+  mounted() {
+    console.log('PersonalInfoSection mounted with modelValue:', this.modelValue);
+    if (!this.modelValue) {
+      console.error('PersonalInfoSection: modelValue is null/undefined!');
+    }
+  },
   computed: {
     localForm: {
       get() {
-        return this.modelValue;
+        console.log('PersonalInfoSection localForm get:', this.modelValue);
+        return this.modelValue || {
+          fullName: '',
+          email: '',
+          phone: '',
+          linkedin: '',
+          location: ''
+        };
       },
       set(val) {
+        console.log('PersonalInfoSection localForm set:', val);
         this.$emit("update:modelValue", val);
       },
     },

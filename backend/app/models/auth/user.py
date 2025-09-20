@@ -6,18 +6,18 @@ from datetime import datetime
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
-    displayName: Optional[str] = None
+    display_name: Optional[str] = None
 
 class UserResponse(BaseModel):
     uid: str
     email: str
-    displayName: Optional[str] = None
-    isSubscribed: bool = False
-    emailVerified: bool = False
-    twoFactorEnabled: bool = False
+    display_name: Optional[str] = None
+    is_subscribed: bool = False
+    email_verified: bool = False
+    two_factor_enabled: bool = False
 
 class UserUpdate(BaseModel):
-    displayName: Optional[str] = None
+    display_name: Optional[str] = None
 
 class UserDocument(BaseModel):
     uid: str

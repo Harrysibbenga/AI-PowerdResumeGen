@@ -7,11 +7,21 @@ const isLoading = ref(true);
 const isAuthenticated = computed(() => !!user.value);
 const authInitialized = ref(false);
 
+// Check if we're in browser environment
+const isBrowser = typeof window !== 'undefined';
+
 let unsubscribe = null;
 let isInitializing = false;
 
 export const useFirebase = () => {
   const initAuth = async () => {
+    // Skip initialization during SSR
+    if (!isBrowser) {
+      authInitialized.value = true;
+      isLoading.value = false;
+      return;
+    }
+
     if (authInitialized.value || isInitializing) {
       return;
     }
@@ -55,8 +65,32 @@ export const useFirebase = () => {
 
   const getCurrentUser = () => user.value;
 
+  const getIdToken = async () => {
+    if (!isBrowser) {
+      throw new Error('Cannot get ID token during server-side rendering');
+    }
+
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
+      throw new Error('User not authenticated');
+    }
+
+    try {
+      return await currentUser.getIdToken();
+    } catch (error) {
+      console.error('Error getting ID token:', error);
+      throw new Error('Failed to get authentication token');
+    }
+  };
+
   const waitForAuth = () => {
     return new Promise((resolve, reject) => {
+      // If not in browser, resolve with null immediately
+      if (!isBrowser) {
+        resolve(null);
+        return;
+      }
+
       if (authInitialized.value) {
         resolve(user.value);
         return;
@@ -81,6 +115,24 @@ export const useFirebase = () => {
     });
   };
 
+  const signOut = async () => {
+    if (!isBrowser) return;
+    
+    try {
+      const auth = getAuth();
+      const { signOut: firebaseSignOut } = await import('firebase/auth');
+      await firebaseSignOut(auth);
+      
+      // Clear any stored resume data on logout
+      localStorage.removeItem('resumeFormData');
+      localStorage.removeItem('currentResumeId');
+      localStorage.removeItem('editMode');
+    } catch (error) {
+      console.error('Error signing out:', error);
+      throw error;
+    }
+  };
+
   const cleanup = () => {
     if (unsubscribe) {
       unsubscribe();
@@ -98,7 +150,9 @@ export const useFirebase = () => {
     initAuth,
     getAuth,
     getCurrentUser,
+    getIdToken,
     waitForAuth,
+    signOut,
     cleanup
   };
 };

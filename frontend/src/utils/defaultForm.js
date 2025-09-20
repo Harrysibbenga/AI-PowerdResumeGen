@@ -96,11 +96,12 @@ export const defaultForm = {
   
   // Certifications
   certifications: [
-    "CompTIA Security+",
-    "Certified Ethical Hacker (CEH)",
-    "AWS Certified Security - Specialty"
+    { name: "CompTIA Security+", issuer: 'CompTIA', date: '2023-06', expiryDate: '2026-06', credentialId: "COMP001234567" },
+    { name: "Certified Ethical Hacker (CEH)", issuer: 'EC-Council', date: '2022-11', expiryDate: '2025-11', credentialId: "ECC-CEH-2022-001" },
+    { name: "AWS Certified Security - Specialty", issuer: 'Amazon Web Services', date: '2023-03', expiryDate: '2026-03', credentialId: "AWS-CSS-2023-789" },
   ],
   
+
   // Languages (new structure)
   languages: [
     {

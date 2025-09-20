@@ -1,38 +1,52 @@
-<template>
+<!-- SubmitButton.vue -->
+<template name="SubmitButton">
   <button
     type="submit"
-    :disabled="disabled"
-    class="px-8 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+    :disabled="disabled || loading"
+    :class="buttonClasses"
+    class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200"
   >
-    <span class="flex items-center justify-center">
-      <svg
-        v-if="loading"
-        class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-        fill="none"
-        viewBox="0 0 24 24"
-      >
-        <circle
-          class="opacity-25"
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          stroke-width="4"
-        />
-        <path
-          class="opacity-75"
-          fill="currentColor"
-          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291..."
-        />
-      </svg>
-      {{ loading ? "Generating Resume..." : "Generate Resume" }}
-    </span>
+    <!-- Loading Spinner -->
+    <i v-if="loading" class="pi pi-spin pi-spinner mr-3 text-white"></i>
+
+    <!-- Success Icon (when not loading and not disabled) -->
+    <i v-else-if="!disabled" class="pi pi-check mr-2"></i>
+
+    <!-- Button Text -->
+    <span>{{ buttonText }}</span>
   </button>
 </template>
 
-<script setup>
-defineProps({
-  loading: Boolean,
-  disabled: Boolean,
+<script setup name="SubmitButton">
+import { computed } from "vue";
+// No icon imports needed with PrimeIcons
+
+const props = defineProps({
+  loading: {
+    type: Boolean,
+    default: false,
+  },
+  disabled: {
+    type: Boolean,
+    default: false,
+  },
+  isEditMode: {
+    type: Boolean,
+    default: false,
+  },
+});
+
+const buttonText = computed(() => {
+  if (props.loading) {
+    return props.isEditMode ? "Updating Resume..." : "Generating Resume...";
+  }
+  return props.isEditMode ? "Update Resume" : "Generate Resume";
+});
+
+const buttonClasses = computed(() => {
+  if (props.disabled || props.loading) {
+    return "bg-gray-300 text-gray-500 cursor-not-allowed";
+  }
+  return "bg-primary-600 hover:bg-primary-700 text-white focus:ring-primary-500 hover:shadow-lg transform hover:-translate-y-0.5";
 });
 </script>
