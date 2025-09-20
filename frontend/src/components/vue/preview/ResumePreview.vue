@@ -53,6 +53,20 @@
             </button>
 
             <button
+              @click="printResume"
+              class="flex items-center px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fill-rule="evenodd"
+                  d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zM5 14H4v-3h1v3zm1 0v2h6v-2H6zm0-1h6v-2H6v2z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+              Print
+            </button>
+
+            <button
               @click="editResume"
               class="flex items-center px-3 py-2 text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
             >
@@ -625,6 +639,7 @@
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useFirebase } from "@/composables/useFirebase";
 import { useToast } from "@/composables/useToast";
+import { usePrintResume } from "@/composables/usePrintResume";
 
 const props = defineProps({
   resumeId: {
@@ -762,8 +777,6 @@ const loadResume = async () => {
     }
 
     const data = await response.json();
-
-    console.log("Resume Data =====>>>>>>", data);
 
     // Store both resume content and metadata
     resumeData.value = {
@@ -966,6 +979,8 @@ const handleClickOutside = (event) => {
     showExportMenu.value = false;
   }
 };
+
+const { printResume } = usePrintResume(resumeData.value);
 
 // Initialize
 onMounted(() => {

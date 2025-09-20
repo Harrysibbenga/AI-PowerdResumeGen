@@ -83,10 +83,14 @@ async def list_resumes(
         # Get all documents for total count and filtering
         all_docs = list(query.stream())
         
-        # Apply search filter
+        # Apply search filter and deleted_at filter
         filtered_docs = []
         for doc in all_docs:
             data = doc.to_dict()
+            
+            # Filter out resumes that have deleted_at field
+            if "deleted_at" in data:
+                continue
             
             if search:
                 search_text = f"{data.get('title', '')} {data.get('target_job_title', '')} {data.get('target_job_role', '')}".lower()

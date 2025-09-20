@@ -1,0 +1,121 @@
+{
+    "languages": [
+        {
+            "name": "English"
+        },
+        {
+            "name": "Spanish"
+        },
+        {
+            "name": "French"
+        },
+        {
+            "name": "German"
+        },
+        {
+            "name": "Italian"
+        },
+        {
+            "name": "Portuguese"
+        },
+        {
+            "name": "Russian"
+        },
+        {
+            "name": "Chinese (Mandarin)"
+        },
+        {
+            "name": "Japanese"
+        },
+        {
+            "name": "Korean"
+        },
+        {
+            "name": "Arabic"
+        },
+        {
+            "name": "Hindi"
+        },
+        {
+            "name": "Dutch"
+        },
+        {
+            "name": "Swedish"
+        },
+        {
+            "name": "Norwegian"
+        },
+        {
+            "name": "Danish"
+        },
+        {
+            "name": "Finnish"
+        },
+        {
+            "name": "Polish"
+        },
+        {
+            "name": "Czech"
+        },
+        {
+            "name": "Hungarian"
+        },
+        {
+            "name": "Greek"
+        },
+        {
+            "name": "Turkish"
+        },
+        {
+            "name": "Hebrew"
+        },
+        {
+            "name": "Thai"
+        },
+        {
+            "name": "Vietnamese"
+        },
+        {
+            "name": "Indonesian"
+        },
+        {
+            "name": "Malay"
+        },
+        {
+            "name": "Swahili"
+        },
+        {
+            "name": "Ukrainian"
+        },
+        {
+            "name": "Romanian"
+        }
+    ],
+    "proficiencyLevels": [
+        {
+            "value": "Native",
+            "label": "Native",
+            "description": "Native or bilingual proficiency"
+        },
+        {
+            "value": "Fluent",
+            "label": "Fluent",
+            "description": "Full professional proficiency"
+        },
+        {
+            "value": "Advanced",
+            "label": "Advanced",
+            "description": "Professional working proficiency"
+        },
+        {
+            "value": "Intermediate",
+            "label": "Intermediate",
+            "description": "Limited working proficiency"
+        },
+        {
+            "value": "Beginner",
+            "label": "Beginner",
+            "description": "Elementary proficiency"
+        }
+    ]
+}
