@@ -1,13 +1,22 @@
 <template>
-  <div class="bg-gray-50 p-6 rounded-md">
-    <h2 class="text-xl font-semibold mb-4">Projects</h2>
+  <div class="bg-white p-6 rounded-lg border border-gray-200">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-semibold text-gray-900">Projects</h3>
+      <button
+        type="button"
+        @click="startAddingProject"
+        class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+      >
+        + Add Project
+      </button>
+    </div>
 
     <!-- Display existing projects -->
-    <div v-if="form.projects && form.projects.length > 0" class="space-y-6 mb-6">
+    <div v-if="projects.length > 0" class="space-y-6 mb-6">
       <div
-        v-for="(project, index) in form.projects"
+        v-for="(project, index) in projects"
         :key="index"
-        class="bg-white p-6 border border-gray-200 rounded-lg shadow-sm"
+        class="bg-gray-50 p-6 border border-gray-200 rounded-lg"
       >
         <div class="flex justify-between items-center mb-4">
           <h3 class="text-lg font-medium text-gray-900">
@@ -245,29 +254,48 @@
       </div>
     </div>
 
-    <!-- Add Project button -->
-    <button
-      v-if="!showProjectForm"
-      type="button"
-      @click="startAddingProject"
-      class="px-4 py-2 text-blue-600 hover:text-blue-800 border border-blue-300 rounded-md hover:bg-blue-50"
-    >
-      + Add Project
-    </button>
+    <!-- Empty State -->
+    <div v-else class="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+      <i class="pi pi-folder text-4xl text-gray-400 mb-2"></i>
+      <p class="text-gray-600 font-medium">No projects added yet</p>
+      <p class="text-gray-500 text-sm mt-1">Click "Add Project" to showcase your work</p>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive } from "vue";
+import { ref, reactive, computed, onMounted } from "vue";
 
-defineProps({
+const props = defineProps({
   modelValue: {
-    type: Object,
+    type: Array,
     required: true,
   },
 });
 
-const form = defineModel("modelValue");
+const emit = defineEmits(['update:modelValue', 'change']);
+
+// Debug logging
+onMounted(() => {
+  console.log('ProjectsInput mounted with modelValue:', props.modelValue);
+  console.log('Projects array type:', typeof props.modelValue, 'isArray:', Array.isArray(props.modelValue));
+  if (Array.isArray(props.modelValue)) {
+    console.log('Projects count:', props.modelValue.length);
+    props.modelValue.forEach((project, index) => {
+      console.log(`Project ${index}:`, project.title || 'Untitled');
+    });
+  }
+});
+
+// Safe access to projects array
+const projects = computed(() => {
+  console.log('ProjectsInput - modelValue:', props.modelValue);
+  if (!Array.isArray(props.modelValue)) {
+    console.warn('ProjectsInput - modelValue is not an array:', typeof props.modelValue, props.modelValue);
+    return [];
+  }
+  return props.modelValue;
+});
 
 // State
 const showProjectForm = ref(false);
@@ -285,16 +313,15 @@ const currentProject = reactive({
   highlights: [""],
 });
 
-// Initialize projects array if it doesn't exist
-const initializeProjects = () => {
-  if (!form.value.projects) {
-    form.value.projects = [];
-  }
+// Update projects array
+const updateProjects = (newProjects) => {
+  console.log('ProjectsInput - updating projects:', newProjects);
+  emit('update:modelValue', newProjects);
+  emit('change');
 };
 
 // Start adding a new project
 const startAddingProject = () => {
-  initializeProjects();
   resetCurrentProject();
   editingIndex.value = null;
   showProjectForm.value = true;
@@ -302,7 +329,7 @@ const startAddingProject = () => {
 
 // Edit existing project
 const editProject = (index) => {
-  const project = form.value.projects[index];
+  const project = projects.value[index];
 
   // Copy project data to currentProject
   currentProject.title = project.title || "";
@@ -333,14 +360,17 @@ const saveProject = () => {
     highlights: currentProject.highlights.filter((h) => h.trim()),
   };
 
+  const updatedProjects = [...projects.value];
+  
   if (editingIndex.value !== null) {
     // Update existing project
-    form.value.projects[editingIndex.value] = projectData;
+    updatedProjects[editingIndex.value] = projectData;
   } else {
     // Add new project
-    form.value.projects.push(projectData);
+    updatedProjects.push(projectData);
   }
 
+  updateProjects(updatedProjects);
   cancelProjectForm();
 };
 
@@ -365,7 +395,9 @@ const resetCurrentProject = () => {
 
 // Remove project
 const removeProject = (index) => {
-  form.value.projects.splice(index, 1);
+  const updatedProjects = [...projects.value];
+  updatedProjects.splice(index, 1);
+  updateProjects(updatedProjects);
 };
 
 // Technology management

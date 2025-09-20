@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projects UI Test</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; }
+        .project-card { background: #f8f9fa; padding: 20px; margin: 16px 0; border-radius: 8px; border: 1px solid #e9ecef; }
+        .project-header { display: flex; justify-content: between; align-items: center; margin-bottom: 12px; }
+        .project-title { font-size: 18px; font-weight: 600; color: #333; }
+        .tech-tag { display: inline-block; padding: 4px 8px; margin: 2px; background: #dbeafe; color: #1e40af; border-radius: 12px; font-size: 12px; }
+        .project-meta { color: #666; font-size: 14px; margin: 8px 0; }
+        .button { padding: 8px 16px; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer; margin: 4px; }
+        .button:hover { background: #1d4ed8; }
+        .button-outline { background: white; color: #2563eb; border: 1px solid #2563eb; }
+        .button-danger { background: #dc2626; }
+    </style>
+</head>
+<body>
+    <h1>Enhanced Projects UI - Test</h1>
+    
+    <div id="projects-demo">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3>Your Projects</h3>
+            <button class="button" onclick="addProject()">+ Add Project</button>
+        </div>
+        
+        <div id="projects-list"></div>
+        
+        <div id="empty-state" style="text-align: center; padding: 40px; background: #f9fafb; border: 2px dashed #d1d5db; border-radius: 8px; display: none;">
+            <div style="font-size: 48px; margin-bottom: 16px;">📁</div>
+            <p style="font-weight: 600; color: #374151;">No projects added yet</p>
+            <p style="color: #6b7280; font-size: 14px;">Click "Add Project" to showcase your work</p>
+        </div>
+    </div>
+
+    <script>
+        // Sample test data matching defaultForm structure
+        let projects = [
+            {
+                title: "Network Security Monitoring Dashboard",
+                description: "Developed a real-time dashboard for monitoring network security events using Python and Grafana. Integrated with multiple SIEM tools to provide centralized threat visibility.",
+                technologies: ["Python", "Grafana", "Elasticsearch", "Docker", "Linux"],
+                url: "https://github.com/johndoe/security-dashboard",
+                startDate: "2023-03",
+                endDate: "2023-08",
+                highlights: [
+                    "Reduced threat detection time by 60%",
+                    "Processed over 10M security events daily", 
+                    "Implemented automated alerting system"
+                ]
+            },
+            {
+                title: "Vulnerability Assessment Tool",
+                description: "Created an automated vulnerability scanning tool that integrates with existing security infrastructure. Built using Python with custom plugins for different system types.",
+                technologies: ["Python", "Nmap", "SQL", "REST APIs"],
+                url: "",
+                startDate: "2022-09", 
+                endDate: "2023-01",
+                highlights: [
+                    "Automated 80% of manual vulnerability checks",
+                    "Discovered 150+ critical vulnerabilities across infrastructure"
+                ]
+            }
+        ];
+
+        function renderProjects() {
+            const container = document.getElementById('projects-list');
+            const emptyState = document.getElementById('empty-state');
+            
+            if (projects.length === 0) {
+                container.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            container.innerHTML = '';
+            
+            projects.forEach((project, index) => {
+                const projectDiv = document.createElement('div');
+                projectDiv.className = 'project-card';
+                
+                const techTags = project.technologies.map(tech => 
+                    `<span class="tech-tag">${tech}</span>`
+                ).join('');
+                
+                const dateRange = formatDateRange(project.startDate, project.endDate);
+                
+                projectDiv.innerHTML = `
+                    <div class="project-header">
+                        <div class="project-title">${project.title}</div>
+                        <button class="button button-danger" onclick="removeProject(${index})">Remove</button>
+                    </div>
+                    
+                    <div class="project-meta">
+                        ${dateRange ? `📅 ${dateRange}` : ''}
+                        ${project.url ? ` • <a href="${project.url}" target="_blank" style="color: #2563eb;">View Project</a>` : ''}
+                    </div>
+                    
+                    <p style="margin: 12px 0; color: #374151; line-height: 1.5;">
+                        ${project.description}
+                    </p>
+                    
+                    <div style="margin: 12px 0;">${techTags}</div>
+                    
+                    ${project.highlights.length > 0 ? `
+                        <div style="margin-top: 12px;">
+                            <strong>Key Highlights:</strong>
+                            <ul style="margin: 8px 0; padding-left: 20px;">
+                                ${project.highlights.map(h => `<li>${h}</li>`).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+                    
+                    <button class="button button-outline" onclick="editProject(${index})">Edit Project</button>
+                `;
+                
+                container.appendChild(projectDiv);
+            });
+        }
+
+        function formatDateRange(startDate, endDate) {
+            if (!startDate) return '';
+            
+            const formatDate = (dateStr) => {
+                const [year, month] = dateStr.split('-');
+                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                return `${monthNames[parseInt(month) - 1]} ${year}`;
+            };
+
+            const start = formatDate(startDate);
+            const end = endDate ? formatDate(endDate) : 'Present';
+            
+            return `${start} - ${end}`;
+        }
+
+        function addProject() {
+            const newProject = {
+                title: "New Project",
+                description: "Enter project description here...",
+                technologies: ["React", "Node.js"],
+                url: "",
+                startDate: "2024-01",
+                endDate: "",
+                highlights: ["Key achievement here"]
+            };
+            projects.push(newProject);
+            renderProjects();
+        }
+
+        function removeProject(index) {
+            projects.splice(index, 1);
+            renderProjects();
+        }
+
+        function editProject(index) {
+            alert(`Edit project: ${projects[index].title}\n(Form would open here)`);
+        }
+
+        // Initial render
+        console.log('Test projects data:', projects);
+        renderProjects();
+    </script>
+</body>
+</html>

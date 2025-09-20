@@ -1,24 +1,9 @@
 # app/models/export.py
-from enum import Enum
 from typing import Dict, List, Optional, Any
 from datetime import datetime
-from pydantic import BaseModel, Field, validator
+from pydantic import validator, Field
 import re
-
-class ExportFormat(str, Enum):
-    PDF = "pdf"
-    DOCX = "docx"
-
-class ExportStatus(str, Enum):
-    PROCESSING = "processing"
-    COMPLETED = "completed"
-    FAILED = "failed"
-    EXPIRED = "expired"
-
-class SubscriptionPlan(str, Enum):
-    FREE = "free"
-    PREMIUM = "premium"
-    ENTERPRISE = "enterprise"
+from .base import BaseModel, ExportFormat, ExportStatus, SubscriptionPlan
 
 class ExportRequest(BaseModel):
     format: ExportFormat

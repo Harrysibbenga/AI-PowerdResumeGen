@@ -6,11 +6,11 @@ import ResumeAccessGate from "@/components/vue/resume/ResumeAccessGate.vue";
 <MainLayout title="Create Your Resume | Resume AI Generator">
     <div class="container mx-auto px-4 py-8 max-w-6xl">
         <div class="bg-white rounded-lg shadow-md p-6 md:p-8">
-            <div class="text-center mb-8">
-                <h1 class="text-3xl font-bold mb-2">
+            <div class="text-center mb-8" id="builder-header">
+                <h1 class="text-3xl font-bold mb-2" id="builder-title">
                     Create Your Professional Resume
                 </h1>
-                <p class="text-gray-600">
+                <p class="text-gray-600" id="builder-description">
                     Fill in your details below and our AI will generate a
                     tailored resume
                 </p>
@@ -20,3 +20,40 @@ import ResumeAccessGate from "@/components/vue/resume/ResumeAccessGate.vue";
         </div>
     </div>
 </MainLayout>
+
+<script>
+    // Client-side script to update header based on edit mode
+    document.addEventListener("DOMContentLoaded", function () {
+        const isBrowser = typeof window !== "undefined";
+        if (!isBrowser) return;
+
+        try {
+            const editMode = localStorage.getItem("editMode");
+            const resumeTitle = localStorage.getItem("resumeFormData");
+
+            if (editMode === "true") {
+                const titleEl = document.getElementById("builder-title");
+                const descEl = document.getElementById("builder-description");
+
+                if (titleEl && descEl) {
+                    let resumeName = "Resume";
+
+                    if (resumeTitle) {
+                        try {
+                            const data = JSON.parse(resumeTitle);
+                            resumeName = data.title || "Resume";
+                        } catch (e) {
+                            console.warn("Could not parse resume title:", e);
+                        }
+                    }
+
+                    titleEl.textContent = `Edit Your Resume: ${resumeName}`;
+                    descEl.textContent =
+                        "Update your resume details below and regenerate with AI";
+                }
+            }
+        } catch (e) {
+            console.warn("Could not update builder header:", e);
+        }
+    });
+</script>
